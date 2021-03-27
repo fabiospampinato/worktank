@@ -5,9 +5,9 @@ import makeNakedPromise from 'promise-make-naked';
 import {FN, PromiseValue, Methods, MethodsSerialized, Options, Task} from './types';
 import Worker from './worker';
 
-/* WORKPOOL */
+/* WORKTANK */
 
-class WorkPool <MethodName extends string, MethodFunction extends FN> {
+class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   /* VARIABLES */
 
@@ -95,7 +95,7 @@ class WorkPool <MethodName extends string, MethodFunction extends FN> {
 
     /* RESETTING TASKS */
 
-    const error = new Error ( 'WorkPool terminated!' );
+    const error = new Error ( 'WorkTank terminated!' );
 
     for ( const task of this.tasksBusy ) task.reject ( error );
     for ( const task of this.tasksReady ) task.reject ( error );
@@ -150,4 +150,4 @@ class WorkPool <MethodName extends string, MethodFunction extends FN> {
 
 /* EXPORT */
 
-export default WorkPool;
+export default WorkTank;

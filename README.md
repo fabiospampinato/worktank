@@ -1,4 +1,4 @@
-# WorkPool
+# WorkTank
 
 A simple isomorphic library for executing functions inside WebWorkers or Node Threads pools.
 
@@ -13,17 +13,17 @@ A simple isomorphic library for executing functions inside WebWorkers or Node Th
 ## Install
 
 ```sh
-npm install --save workpool
+npm install --save worktank
 ```
 
 ## Usage
 
-First you have to make a pool:
+First you have to make a worker pool:
 
 ```ts
-import WorkPool from 'workpool';
+import WorkTank from 'worktank';
 
-const pool = new WorkPool ({
+const pool = new WorkTank ({
   size: 5, // The maximum number of worker threads to spawn, they will only get spawned if actually needed
   methods: { // An object mapping function names to functions objects to serialize and deserialize into each worker thread, only functions that don't depend on their closure can be serialized
     sum: function ( a: number, b: number ): number {

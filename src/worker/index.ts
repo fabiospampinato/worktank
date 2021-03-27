@@ -58,7 +58,7 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
 
     const {task} = this;
 
-    if ( !task ) throw new Error ( 'WorkPool Worker: missing task' );
+    if ( !task ) throw new Error ( 'WorkTank Worker: missing task' );
 
     this.busy = false;
     this.task = undefined;
@@ -87,7 +87,7 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
 
   exec ( task: Task<MethodName, MethodFunction> ): void {
 
-    if ( this.terminated || this.task || this.busy ) throw new Error ( 'WorkPool Worker: already busy or terminated' );
+    if ( this.terminated || this.task || this.busy ) throw new Error ( 'WorkTank Worker: already busy or terminated' );
 
     this.task = task;
 
