@@ -13,8 +13,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   terminated: boolean;
   size: number;
-  methods: Methods<MethodName, MethodFunction>;
-  methodsSerialized: MethodsSerialized<MethodName>;
+  methods: MethodsSerialized<MethodName>;
   tasksBusy: Set<Task<MethodName, MethodFunction>>;
   tasksReady: Set<Task<MethodName, MethodFunction>>;
   workersBusy: Set<Worker<MethodName, MethodFunction>>;
@@ -26,8 +25,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
     this.terminated = false;
     this.size = options.size ?? 1;
-    this.methods = options.methods;
-    this.methodsSerialized = this._getMethodsSerialized ();
+    this.methods = this._getMethodsSerialized ( options.methods );
     this.tasksBusy = new Set ();
     this.tasksReady = new Set ();
     this.workersBusy = new Set ();
@@ -37,19 +35,17 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   /* HELPERS */
 
-  _getMethodsSerialized (): MethodsSerialized<MethodName> {
+  _getMethodsSerialized ( methods: Methods<MethodName, MethodFunction> ): MethodsSerialized<MethodName> {
 
-    const methods: MethodsSerialized<string> = {};
+    const methodsSerialized: MethodsSerialized<string> = {};
 
-    for ( const method in this.methods ) {
+    for ( const method in methods ) {
 
-      const serialized = this.methods[method].toString ();
-
-      methods[method] = serialized;
+      methodsSerialized[method] = methods[method].toString ();
 
     }
 
-    return methods;
+    return methodsSerialized;
 
   }
 
@@ -65,7 +61,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
     if ( this.workersBusy.size >= this.size ) return;
 
-    const worker = new Worker ( this.methodsSerialized );
+    const worker = new Worker ( this.methods );
 
     this.workersReady.add ( worker );
 
