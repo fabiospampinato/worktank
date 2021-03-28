@@ -7,6 +7,7 @@ A simple isomorphic library for executing functions inside WebWorkers or Node Th
 - **Small**: It's about as small as you can make it.
 - **Isomorphic**: It transparently uses WebWorkers if they are available, otherwise it uses Node's `worker_threads` module.
 - **Dynamic pools**: You can create pools dynamically, just by passing serializable functions to the library at run time, without needing any bundler plugins at all.
+- **Static pools**: You can create pools at build-time too, if the functions you need to send to workers require bundling, just by using the official [WebPack loader](https://github.com/fabiospampinato/worktank-loader).
 - **Electron-ready**: Electron's special renderer process environment is supported out of the box too.
 - **TypeScript-ready**: Types come with the library and aren't an afterthought.
 
@@ -18,7 +19,13 @@ npm install --save worktank
 
 ## Usage
 
-First you have to make a worker pool:
+There are two ways to make worker pools, one is dynamic and can be done entirely at runtime, the other one is static and requires a bundler plugin.
+
+### Dynamic Pools
+
+Dynamic pools can be created at runtime and require no bundler plugin at all, for them to work the functions to execute in worker threads must be serializable just by calling `#toString` on them, basically they must not depend on their closure.
+
+First of all you have to make a worker pool:
 
 ```ts
 import WorkTank from 'worktank';
@@ -36,7 +43,7 @@ const pool = new WorkTank ({
 });
 ```
 
-Then you call `exec` on the pool, to call the method that you want inside the first available worker:
+Then you can call `exec` on the pool instance, to call the method that you want inside the first available worker:
 
 ```ts
 const result = await pool.exec (
@@ -47,11 +54,23 @@ const result = await pool.exec (
 console.log ( result ); // 15
 ```
 
-Lastly once you are done you can call `terminate` to end all the worker threads the pool spawned and free up some memory, if you call `exec` on the pool again after having called `terminate` on it the needed worker threads will be spawned up again:
+Lastly once you are done with the pool you can call `terminate` on it to end all the worker threads the pool spawned and free up some memory, if you call `exec` on the pool again after having called `terminate` on it the needed worker threads will be spawned up again:
 
 ```ts
 pool.terminate ();
 ```
+
+That's it! Super easy, isn't it?
+
+### Static Pools
+
+Static pools require a bundler plugin to make, the plugin allows you to move to worker pools functions that depend on their closure, for example functions that might need to import some dependency that needs to be bundled too.
+
+The following plugins are currently available:
+
+- **WebPack**: [worktank-loader](https://github.com/fabiospampinato/worktank-loader).
+
+Read their documentation to learn how to use them, but TL;DR: it's mostly just a matter of adding a couple of lines of configuration for your bundlers.
 
 ## License
 
