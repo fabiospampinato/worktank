@@ -1,7 +1,7 @@
 {
   "name": "worktank",
   "description": "A simple isomorphic library for executing functions inside WebWorkers or Node Threads pools.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
