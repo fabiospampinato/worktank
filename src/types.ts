@@ -15,7 +15,7 @@ type MessageExec = {
 
 type MessageInit = {
   type: 'init',
-  methods: MethodsSerialized<string>
+  methods: MethodsSerialized<string> | string
 };
 
 type MessageReady = {
@@ -48,7 +48,7 @@ type MethodsSerialized <MethodName extends string = string> = Record<MethodName,
 
 type Options <MethodName extends string = string, MethodFunction extends FN = FN> = {
   size?: number,
-  methods: Methods<MethodName, MethodFunction>
+  methods: Methods<MethodName, MethodFunction> | string
 };
 
 type Task <MethodName extends string = string, MethodFunction extends FN = FN, Method extends MethodName = MethodName> = {

@@ -13,7 +13,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   terminated: boolean;
   size: number;
-  methods: MethodsSerialized<MethodName>;
+  methods: MethodsSerialized<MethodName> | string;
   tasksBusy: Set<Task<MethodName, MethodFunction>>;
   tasksReady: Set<Task<MethodName, MethodFunction>>;
   workersBusy: Set<Worker<MethodName, MethodFunction>>;
@@ -35,17 +35,25 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   /* HELPERS */
 
-  _getMethodsSerialized ( methods: Methods<MethodName, MethodFunction> ): MethodsSerialized<MethodName> {
+  _getMethodsSerialized ( methods: Methods<MethodName, MethodFunction> | string ): MethodsSerialized<MethodName> | string {
 
-    const methodsSerialized: MethodsSerialized<string> = {};
+    if ( typeof methods === 'string' ) { // Serialized function that returns the methods, useful for complex workers
 
-    for ( const method in methods ) {
+      return methods;
 
-      methodsSerialized[method] = methods[method].toString ();
+    } else { // Deserialized methods map
+
+      const serialized: MethodsSerialized<string> = {};
+
+      for ( const method in methods ) {
+
+        serialized[method] = methods[method].toString ();
+
+      }
+
+      return serialized;
 
     }
-
-    return methodsSerialized;
 
   }
 

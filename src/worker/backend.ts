@@ -75,7 +75,7 @@ const Backend = {
 
   },
 
-  init: ( methods: Record<string, string> ): void => {
+  init: ( methods: Record<string, string> | string ): void => {
 
     Backend.register ( methods );
 
@@ -91,13 +91,27 @@ const Backend = {
 
   },
 
-  register: ( methods: Record<string, string> ): void => {
+  register: ( methods: Record<string, string> | string ): void => {
 
-    for ( const method in methods ) {
+    if ( typeof methods === 'string' ) { // Serialized function that returns the methods
 
-      const fn = new Function ( `return (${methods[method]})` )();
+      const fns = new Function ( methods )();
 
-      Backend.methods[method] = fn;
+      for ( const method in fns ) {
+
+        Backend.methods[method] = fns[method];
+
+      }
+
+    } else { // Serialized methods map
+
+      for ( const method in methods ) {
+
+        const fn = new Function ( `return (${methods[method]})` )();
+
+        Backend.methods[method] = fn;
+
+      }
 
     }
 

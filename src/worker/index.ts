@@ -14,13 +14,13 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
   busy: boolean;
   loaded: boolean;
   terminated: boolean;
-  methods: MethodsSerialized<MethodName>;
+  methods: MethodsSerialized<MethodName> | string;
   task?: Task<MethodName, MethodFunction>;
   worker: WorkerWeb | WorkerNode;
 
   /* CONSTRUCTOR */
 
-  constructor ( methods: MethodsSerialized<MethodName> ) {
+  constructor ( methods: MethodsSerialized<MethodName> | string ) {
 
     this.busy = false;
     this.loaded = false;
