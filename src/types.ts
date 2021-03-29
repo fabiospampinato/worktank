@@ -47,6 +47,7 @@ type Methods <MethodName extends string = string, MethodFunction extends FN = FN
 type MethodsSerialized <MethodName extends string = string> = Record<MethodName, string>;
 
 type Options <MethodName extends string = string, MethodFunction extends FN = FN> = {
+  name?: string,
   size?: number,
   methods: Methods<MethodName, MethodFunction> | string
 };

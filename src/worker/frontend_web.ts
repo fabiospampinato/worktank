@@ -15,13 +15,13 @@ class WorkerWeb extends WorkerAbstract<Worker> {
 
   /* CONSTRUCTOR */
 
-  constructor ( listener: Function ) {
+  constructor ( listener: Function, name: string ) {
 
     super ();
 
     this.workerBlob = new Blob ( [WorkerBackend], { type: 'text/javascript' } );
     this.workerBlobUrl = URL.createObjectURL ( this.workerBlob );
-    this.worker = new Worker ( this.workerBlobUrl );
+    this.worker = new Worker ( this.workerBlobUrl, { name } );
 
     this.listen ( listener );
 

@@ -14,23 +14,25 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
   busy: boolean;
   loaded: boolean;
   terminated: boolean;
+  name: string;
   methods: MethodsSerialized<MethodName> | string;
   task?: Task<MethodName, MethodFunction>;
   worker: WorkerWeb | WorkerNode;
 
   /* CONSTRUCTOR */
 
-  constructor ( methods: MethodsSerialized<MethodName> | string ) {
+  constructor ( methods: MethodsSerialized<MethodName> | string, name: string ) {
 
     this.busy = false;
     this.loaded = false;
     this.terminated = false;
+    this.name = name;
     this.methods = methods;
 
     const supportsWebWorkers = ( typeof window === 'object' ) && ( typeof window.Worker === 'function' ),
           WorkerFrontend = supportsWebWorkers ? WorkerWeb : WorkerNode;
 
-    this.worker = new WorkerFrontend ( this.onMessage.bind ( this ) );
+    this.worker = new WorkerFrontend ( this.onMessage.bind ( this ), this.name );
 
     this.init ();
 
@@ -58,7 +60,7 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
 
     const {task} = this;
 
-    if ( !task ) throw new Error ( 'WorkTank Worker: missing task' );
+    if ( !task ) throw new Error ( `WorkTank Worker (${this.name}): missing task` );
 
     this.busy = false;
     this.task = undefined;
@@ -87,7 +89,7 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
 
   exec ( task: Task<MethodName, MethodFunction> ): void {
 
-    if ( this.terminated || this.task || this.busy ) throw new Error ( 'WorkTank Worker: already busy or terminated' );
+    if ( this.terminated || this.task || this.busy ) throw new Error ( `WorkTank Worker (${this.name}): already busy or terminated` );
 
     this.task = task;
 

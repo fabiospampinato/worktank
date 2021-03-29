@@ -10,7 +10,7 @@ class WorkerNode extends WorkerAbstract<any> {
 
   /* CONSTRUCTOR */
 
-  constructor ( listener: Function ) {
+  constructor ( listener: Function, name: string ) {
 
     super ();
 

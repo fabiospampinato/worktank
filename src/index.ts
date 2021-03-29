@@ -12,6 +12,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
   /* VARIABLES */
 
   terminated: boolean;
+  name: string;
   size: number;
   methods: MethodsSerialized<MethodName> | string;
   tasksBusy: Set<Task<MethodName, MethodFunction>>;
@@ -24,6 +25,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
   constructor ( options: Options<MethodName, MethodFunction> ) {
 
     this.terminated = false;
+    this.name = options.name ?? 'WorkTank-Worker';
     this.size = options.size ?? 1;
     this.methods = this._getMethodsSerialized ( options.methods );
     this.tasksBusy = new Set ();
@@ -63,13 +65,25 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   }
 
+  _getWorkerName (): string {
+
+    if ( this.size < 2 ) return this.name;
+
+    const counter = 1 + ( this.workersBusy.size + this.workersReady.size );
+
+    return `${this.name} (${counter})`;
+
+  }
+
   _getWorkerReady (): Worker<MethodName, MethodFunction> | undefined {
 
     for ( const worker of this.workersReady ) return worker;
 
     if ( this.workersBusy.size >= this.size ) return;
 
-    const worker = new Worker ( this.methods );
+    const name = this._getWorkerName ();
+
+    const worker = new Worker ( this.methods, name );
 
     this.workersReady.add ( worker );
 
