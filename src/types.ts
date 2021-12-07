@@ -49,6 +49,7 @@ type MethodsSerialized <MethodName extends string = string> = Record<MethodName,
 type Options <MethodName extends string = string, MethodFunction extends FN = FN> = {
   name?: string,
   size?: number,
+  timeout?: number,
   methods: Methods<MethodName, MethodFunction> | string
 };
 

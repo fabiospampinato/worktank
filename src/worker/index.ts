@@ -103,6 +103,14 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
 
     this.worker.terminate ();
 
+    if ( this.task ) {
+
+      const error = new Error ( `WorkTank Worker (${this.name}): terminated` );
+
+      this.task.reject ( error );
+
+    }
+
   }
 
   tick (): void {

@@ -12,6 +12,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
   /* VARIABLES */
 
   terminated: boolean;
+  timeout: number;
   name: string;
   size: number;
   methods: MethodsSerialized<MethodName> | string;
@@ -25,6 +26,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
   constructor ( options: Options<MethodName, MethodFunction> ) {
 
     this.terminated = false;
+    this.timeout = options.timeout ?? Infinity;
     this.name = options.name ?? 'WorkTank-Worker';
     this.size = options.size ?? 1;
     this.methods = this._getMethodsSerialized ( options.methods );
@@ -147,12 +149,37 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
     this.tasksReady.delete ( task );
     this.tasksBusy.add ( task );
 
+    let timeoutId = 0;
+
+    if ( this.timeout > 0 && this.timeout !== Infinity ) {
+
+      const timeout = Math.min ( 2147483647, this.timeout );
+
+      timeoutId = setTimeout ( (): void => {
+
+        worker.terminate ();
+
+      }, timeout );
+
+    }
+
     task.promise.finally ( () => {
+
+      if ( timeoutId ) {
+
+        clearTimeout ( timeoutId );
+
+      }
 
       if ( this.terminated ) return;
 
       this.workersBusy.delete ( worker );
-      this.workersReady.add ( worker );
+
+      if ( !worker.terminated ) {
+
+        this.workersReady.add ( worker );
+
+      }
 
       this.tasksBusy.delete ( task );
 
