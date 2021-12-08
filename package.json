@@ -40,7 +40,7 @@
     "promise-make-naked": "^1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^12.20.6",
+    "@types/node": "^16.11.12",
     "rimraf": "^3.0.0",
     "typescript": "^3.5.3",
     "typescript-transform-export-interop": "^1.0.2"

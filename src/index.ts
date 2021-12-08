@@ -149,7 +149,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
     this.tasksReady.delete ( task );
     this.tasksBusy.add ( task );
 
-    let timeoutId = 0;
+    let timeoutId: NodeJS.Timeout;
 
     if ( this.timeout > 0 && this.timeout !== Infinity ) {
 
