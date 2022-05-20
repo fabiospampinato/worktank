@@ -1,65 +1,34 @@
 
 /* IMPORT */
 
-import {Message} from '../types';
+import type {Message} from '../types';
 
-/* FRONTEND */
+/* MAIN */
 
-const Frontend = (() => {
-
-  const IS_WEBWORKER = ( typeof postMessage === 'function' );
-
-  if ( IS_WEBWORKER ) {
-
-    const worker = globalThis as unknown as Worker; //TSC
-
-    return {
-      on: ( event: string, callback: Function ): void => {
-        worker.addEventListener ( event, message => {
-          callback ( message['data'] );
-        });
-      },
-      send: ( message: Message ): void => {
-        worker.postMessage ( message );
-      }
-    };
-
-  } else {
-
-    const thread = require ( 'worker_threads' ).parentPort;
-
-    return {
-      on: ( event: string, callback: Function ): void => {
-        thread.on ( event, callback );
-      },
-      send: ( message: Message ): void => {
-        thread.postMessage ( message );
-      }
-    };
-
-  }
-
-})();
-
-/* BACKEND */
-
-const Backend = {
+class WorkerBackend {
 
   /* VARIABLES */
 
-  methods: <Record<string, Function>> {},
+  private methods: Record<string, Function> = {};
+
+  /* CONSTRUCTOR */
+
+  constructor () {
+
+    addEventListener ( 'message', this.message.bind ( this ) );
+
+  }
 
   /* API */
 
-  exec: ( method: string, args: any[] ): void => {
+  exec ( method: string, args: any[] ): void {
 
-    const fn = Backend.methods[method],
-          ctx = { require: globalThis.require },
-          result = new Promise ( resolve => resolve ( fn.apply ( ctx, args ) ) );
+    const fn = this.methods[method];
+    const result = new Promise ( resolve => resolve ( fn.apply ( undefined, args ) ) );
 
     const onSuccess = ( value: any ): void => {
       try {
-        Frontend.send ({ type: 'result', value });
+        postMessage ({ type: 'result', value });
       } catch ( error ) {
         onError ( error );
       }
@@ -68,30 +37,30 @@ const Backend = {
     const onError = ( error: any ): void => {
       error = ( error instanceof Error ) ? error : ( typeof error === 'string' ? new Error ( error ) : new Error () );
       const {message, name, stack} = error;
-      Frontend.send ({ type: 'result', error: {message, name, stack} });
+      postMessage ({ type: 'result', error: {message, name, stack} });
     };
 
     result.then ( onSuccess, onError );
 
-  },
+  }
 
-  init: ( methods: Record<string, string> | string ): void => {
+  init ( methods: Record<string, string> | string ): void {
 
-    Backend.register ( methods );
+    this.register ( methods );
 
-    Frontend.send ({ type: 'ready' });
+    postMessage ({ type: 'ready' });
 
-  },
+  }
 
-  message: ( message: Message ): void => {
+  message ( message: Event & { data: Message } ): void {
 
-    if ( message.type === 'init' ) return Backend.init ( message.methods );
+    if ( message.data.type === 'init' ) return this.init ( message.data.methods );
 
-    if ( message.type === 'exec' ) return Backend.exec ( message.method, message.args );
+    if ( message.data.type === 'exec' ) return this.exec ( message.data.method, message.data.args );
 
-  },
+  }
 
-  register: ( methods: Record<string, string> | string ): void => {
+  register ( methods: Record<string, string> | string ): void {
 
     if ( typeof methods === 'string' ) { // Serialized function that returns the methods
 
@@ -99,7 +68,7 @@ const Backend = {
 
       for ( const method in fns ) {
 
-        Backend.methods[method] = fns[method];
+        this.methods[method] = fns[method];
 
       }
 
@@ -109,7 +78,7 @@ const Backend = {
 
         const fn = new Function ( `return (${methods[method]})` )();
 
-        Backend.methods[method] = fn;
+        this.methods[method] = fn;
 
       }
 
@@ -117,8 +86,8 @@ const Backend = {
 
   }
 
-};
+}
 
 /* INIT */
 
-Frontend.on ( 'message', Backend.message );
+new WorkerBackend ();

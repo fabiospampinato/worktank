@@ -50,6 +50,7 @@ type Options <MethodName extends string = string, MethodFunction extends FN = FN
   name?: string,
   size?: number,
   timeout?: number,
+  autoterminate?: number,
   methods: Methods<MethodName, MethodFunction> | string
 };
 
@@ -63,6 +64,6 @@ type Task <MethodName extends string = string, MethodFunction extends FN = FN, M
 
 /* EXPORT */
 
-export {FN, PromiseValue};
-export {MessageExec, MessageInit, MessageReady, MessageResult, Message};
-export {Methods, MethodsSerialized, Options, Task};
+export type {FN, PromiseValue};
+export type {MessageExec, MessageInit, MessageReady, MessageResult, Message};
+export type {Methods, MethodsSerialized, Options, Task};

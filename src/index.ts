@@ -2,31 +2,35 @@
 /* IMPORT */
 
 import makeNakedPromise from 'promise-make-naked';
-import {FN, PromiseValue, Methods, MethodsSerialized, Options, Task} from './types';
 import Worker from './worker';
+import type {FN, PromiseValue, Methods, MethodsSerialized, Options, Task} from './types';
 
-/* WORKTANK */
+/* MAIN */
 
 class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   /* VARIABLES */
 
-  terminated: boolean;
-  timeout: number;
-  name: string;
-  size: number;
-  methods: MethodsSerialized<MethodName> | string;
-  tasksBusy: Set<Task<MethodName, MethodFunction>>;
-  tasksReady: Set<Task<MethodName, MethodFunction>>;
-  workersBusy: Set<Worker<MethodName, MethodFunction>>;
-  workersReady: Set<Worker<MethodName, MethodFunction>>;
+  public terminated: boolean;
+
+  private timeout: number;
+  private terminateTimeout: number;
+  private terminateTimeoutId?: ReturnType<typeof setTimeout>;
+  private name: string;
+  private size: number;
+  private methods: MethodsSerialized<MethodName> | string;
+  private tasksBusy: Set<Task<MethodName, MethodFunction>>;
+  private tasksReady: Set<Task<MethodName, MethodFunction>>;
+  private workersBusy: Set<Worker<MethodName, MethodFunction>>;
+  private workersReady: Set<Worker<MethodName, MethodFunction>>;
 
   /* CONSTRUCTOR */
 
   constructor ( options: Options<MethodName, MethodFunction> ) {
 
-    this.terminated = false;
+    this.terminated = true;
     this.timeout = options.timeout ?? Infinity;
+    this.terminateTimeout = options.autoterminate ?? 60000;
     this.name = options.name ?? 'WorkTank-Worker';
     this.size = options.size ?? 1;
     this.methods = this._getMethodsSerialized ( options.methods );
@@ -38,6 +42,32 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
   }
 
   /* HELPERS */
+
+  _autoterminate (): void {
+
+    if ( this.terminateTimeoutId ) return;
+
+    if ( !this.tasksBusy.size && !this.tasksReady.size ) {
+
+      this.terminateTimeoutId = undefined;
+
+      this.terminate ();
+
+    } else {
+
+      const interval = Math.min ( 2147483647, this.terminateTimeout );
+
+      this.terminateTimeoutId = setTimeout ( () => {
+
+        this.terminateTimeoutId = undefined;
+
+        this._autoterminate ();
+
+      }, interval );
+
+    }
+
+  }
 
   _getMethodsSerialized ( methods: Methods<MethodName, MethodFunction> | string ): MethodsSerialized<MethodName> | string {
 
@@ -97,13 +127,15 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   exec ( method: MethodName, args: Parameters<Methods<MethodName, MethodFunction>[MethodName]> ): Promise<PromiseValue<ReturnType<Methods<MethodName, MethodFunction>[MethodName]>>> {
 
-    const {promise, resolve, reject} = makeNakedPromise<any> (),
-          task = { method, args, promise, resolve, reject };
+    const {promise, resolve, reject} = makeNakedPromise<any> ();
+    const task = { method, args, promise, resolve, reject };
 
     this.terminated = false;
     this.tasksReady.add ( task );
 
     this.tick ();
+
+    this._autoterminate ();
 
     return promise;
 
@@ -112,6 +144,8 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
   terminate (): void {
 
     this.terminated = true;
+
+    clearTimeout ( this.terminateTimeoutId );
 
     /* RESETTING TASKS */
 
@@ -149,7 +183,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
     this.tasksReady.delete ( task );
     this.tasksBusy.add ( task );
 
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     if ( this.timeout > 0 && this.timeout !== Infinity ) {
 

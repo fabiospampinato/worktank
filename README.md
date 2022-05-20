@@ -34,9 +34,10 @@ const pool = new WorkTank ({
   name: 'example', // Name of the worker pool, useful for debugging purposes
   size: 5, // The maximum number of worker threads to spawn, they will only get spawned if actually needed
   timeout: 10000, // The maximum number of milliseconds to wait for the result from the worker, if exceeded the worker is terminated and the execution promise rejects
+  autoterminate: 60000, // The interval of milliseconds at which to check if the pool can be automatically terminated, to free up resources, workers will be spawned up again if needed
   methods: { // An object mapping function names to functions objects to serialize and deserialize into each worker thread, only functions that don't depend on their closure can be serialized
-    sum: function ( a: number, b: number ): number {
-      const math = this.require ( 'math' ) // Use `this.require` rather than the regular `require` inside functions that need to load a dependency if you are using a bundler, or pre-bundle the functions that get sent to worker threads
+    sum: function ( a: number, b: number ): Promise<number> {
+      const {default: math} = await import ( 'math' );
       return math.sum ( a + b );
     },
     foo: () => {}, // Another method to pass to worker threads

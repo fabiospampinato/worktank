@@ -1,23 +1,23 @@
 
 /* IMPORT */
 
-import {FN, Message, MessageReady, MessageResult, MethodsSerialized, Task} from '../types';
-import WorkerNode from './frontend_node';
-import WorkerWeb from './frontend_web';
+import WorkerFrontend from './frontend';
+import type {FN, Message, MessageReady, MessageResult, MethodsSerialized, Task} from '../types';
 
-/* WORKER */
+/* MAIN */
 
 class Worker <MethodName extends string, MethodFunction extends FN> {
 
   /* VARIABLES */
 
-  busy: boolean;
-  loaded: boolean;
-  terminated: boolean;
-  name: string;
-  methods: MethodsSerialized<MethodName> | string;
-  task?: Task<MethodName, MethodFunction>;
-  worker: WorkerWeb | WorkerNode;
+  public busy: boolean;
+  public loaded: boolean;
+  public terminated: boolean;
+
+  private name: string;
+  private methods: MethodsSerialized<MethodName> | string;
+  private task?: Task<MethodName, MethodFunction>;
+  private worker: WorkerFrontend;
 
   /* CONSTRUCTOR */
 
@@ -28,10 +28,6 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
     this.terminated = false;
     this.name = name;
     this.methods = methods;
-
-    const supportsWebWorkers = ( typeof window === 'object' ) && ( typeof window.Worker === 'function' ),
-          WorkerFrontend = supportsWebWorkers ? WorkerWeb : WorkerNode;
-
     this.worker = new WorkerFrontend ( this.onMessage.bind ( this ), this.name );
 
     this.init ();
@@ -97,7 +93,7 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
 
   }
 
-  terminate () {
+  terminate (): void {
 
     this.terminated = true;
 
