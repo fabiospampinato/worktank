@@ -28,6 +28,7 @@
     "node"
   ],
   "dependencies": {
+    "import-fool-webpack": "^1.0.0",
     "promise-make-naked": "^2.0.0",
     "web-worker": "1.2.0"
   },

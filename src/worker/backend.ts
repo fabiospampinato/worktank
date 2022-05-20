@@ -1,6 +1,7 @@
 
 /* IMPORT */
 
+import importFool from 'import-fool-webpack';
 import type {Message} from '../types';
 
 /* MAIN */
@@ -24,7 +25,7 @@ class WorkerBackend {
   exec ( method: string, args: any[] ): void {
 
     const fn = this.methods[method];
-    const result = new Promise ( resolve => resolve ( fn.apply ( undefined, args ) ) );
+    const result = new Promise ( resolve => resolve ( fn.apply ( { import: importFool }, args ) ) );
 
     const onSuccess = ( value: any ): void => {
       try {

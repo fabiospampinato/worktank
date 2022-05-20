@@ -37,7 +37,7 @@ const pool = new WorkTank ({
   autoterminate: 60000, // The interval of milliseconds at which to check if the pool can be automatically terminated, to free up resources, workers will be spawned up again if needed
   methods: { // An object mapping function names to functions objects to serialize and deserialize into each worker thread, only functions that don't depend on their closure can be serialized
     sum: function ( a: number, b: number ): Promise<number> {
-      const {default: math} = await import ( 'math' );
+      const {default: math} = await this.import ( 'math' ); // Use `this.import` rather than the regular `import` inside functions that need to load a dependency if you are using a bundler, or pre-bundle the functions that get sent to worker threads
       return math.sum ( a + b );
     },
     foo: () => {}, // Another method to pass to worker threads
