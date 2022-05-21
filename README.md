@@ -71,7 +71,9 @@ Static pools require a bundler plugin to make, the plugin allows you to move to 
 
 The following plugins are currently available:
 
-- **WebPack**: [worktank-loader](https://github.com/fabiospampinato/worktank-loader).
+- **Esbuild**: //TODO
+- **Vite**: //TODO
+- **WebPack**: [worktank-loader](https://github.com/fabiospampinato/worktank-loader), it only works with v1.x.x.
 
 Read their documentation to learn how to use them, but TL;DR: it's mostly just a matter of adding a couple of lines of configuration for your bundlers.
 
