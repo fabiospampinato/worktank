@@ -29,7 +29,7 @@
   ],
   "dependencies": {
     "promise-make-naked": "^2.0.0",
-    "web-worker": "1.2.0"
+    "webworker-shim": "^1.0.0"
   },
   "devDependencies": {
     "esbuild": "^0.14.39",
