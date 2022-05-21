@@ -2,7 +2,7 @@
 /* IMPORT */
 
 import WorkerFrontend from './frontend';
-import type {FN, Message, MessageReady, MessageResult, MethodsSerialized, Task} from '../types';
+import type {FN, Message, MessageReady, MessageResult, Task} from '../types';
 
 /* MAIN */
 
@@ -15,20 +15,20 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
   public terminated: boolean;
 
   private name: string;
-  private methods: MethodsSerialized<MethodName> | string;
+  private methods: string;
   private task?: Task<MethodName, MethodFunction>;
   private worker: WorkerFrontend;
 
   /* CONSTRUCTOR */
 
-  constructor ( methods: MethodsSerialized<MethodName> | string, name: string ) {
+  constructor ( methods: string, name: string ) {
 
     this.busy = false;
     this.loaded = false;
     this.terminated = false;
     this.name = name;
     this.methods = methods;
-    this.worker = new WorkerFrontend ( this.onMessage.bind ( this ), this.name );
+    this.worker = new WorkerFrontend ( this.methods, this.name, this.onMessage.bind ( this ) );
 
     this.init ();
 
@@ -79,7 +79,7 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
 
   init (): void {
 
-    this.worker.send ({ type: 'init', methods: this.methods });
+    this.worker.send ({ type: 'init' });
 
   }
 

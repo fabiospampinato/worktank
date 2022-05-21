@@ -3,7 +3,7 @@
 
 import makeNakedPromise from 'promise-make-naked';
 import Worker from './worker';
-import type {FN, PromiseValue, Methods, MethodsSerialized, Options, Task} from './types';
+import type {FN, Methods, Options, Task} from './types';
 
 /* MAIN */
 
@@ -11,14 +11,13 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   /* VARIABLES */
 
-  public terminated: boolean;
-
-  private timeout: number;
+  private terminated: boolean;
   private terminateTimeout: number;
   private terminateTimeoutId?: ReturnType<typeof setTimeout>;
+  private timeout: number;
   private name: string;
   private size: number;
-  private methods: MethodsSerialized<MethodName> | string;
+  private methods: string;
   private tasksBusy: Set<Task<MethodName, MethodFunction>>;
   private tasksReady: Set<Task<MethodName, MethodFunction>>;
   private workersBusy: Set<Worker<MethodName, MethodFunction>>;
@@ -33,7 +32,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
     this.terminateTimeout = options.autoterminate ?? 60000;
     this.name = options.name ?? 'WorkTank-Worker';
     this.size = options.size ?? 1;
-    this.methods = this._getMethodsSerialized ( options.methods );
+    this.methods = this._getMethods ( options.methods );
     this.tasksBusy = new Set ();
     this.tasksReady = new Set ();
     this.workersBusy = new Set ();
@@ -55,7 +54,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
     } else {
 
-      const interval = Math.min ( 2147483647, this.terminateTimeout );
+      const timeout = Math.min ( 2147483647, this.terminateTimeout );
 
       this.terminateTimeoutId = setTimeout ( () => {
 
@@ -63,27 +62,23 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
         this._autoterminate ();
 
-      }, interval );
+      }, timeout );
 
     }
 
   }
 
-  _getMethodsSerialized ( methods: Methods<MethodName, MethodFunction> | string ): MethodsSerialized<MethodName> | string {
+  _getMethods ( methods: Methods<MethodName, MethodFunction> | string ): string {
 
-    if ( typeof methods === 'string' ) { // Serialized function that returns the methods, useful for complex workers
+    if ( typeof methods === 'string' ) { // Already serialized methods, useful for complex and/or bundled workers
 
       return methods;
 
-    } else { // Deserialized methods map
+    } else { // Serializable methods
 
-      const serialized: MethodsSerialized<string> = {};
-
-      for ( const method in methods ) {
-
-        serialized[method] = methods[method].toString ();
-
-      }
+      const names = Object.keys ( methods );
+      const values = Object.values<MethodFunction> ( methods );
+      const serialized = names.map ( ( name, index ) => `WorkTankWorkerBackend.register ( '${name}', ${values[index].toString ()} );` ).join ( '\n' );
 
       return serialized;
 
@@ -115,7 +110,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
     const name = this._getWorkerName ();
 
-    const worker = new Worker ( this.methods, name );
+    const worker = new Worker<MethodName, MethodFunction> ( this.methods, name );
 
     this.workersReady.add ( worker );
 
@@ -125,7 +120,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   /* API */
 
-  exec ( method: MethodName, args: Parameters<Methods<MethodName, MethodFunction>[MethodName]> ): Promise<PromiseValue<ReturnType<Methods<MethodName, MethodFunction>[MethodName]>>> {
+  exec ( method: MethodName, args: Parameters<Methods<MethodName, MethodFunction>[MethodName]> ): Promise<Awaited<ReturnType<Methods<MethodName, MethodFunction>[MethodName]>>> {
 
     const {promise, resolve, reject} = makeNakedPromise<any> ();
     const task = { method, args, promise, resolve, reject };
@@ -145,7 +140,11 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
     this.terminated = true;
 
+    /* RESETTING AUTO-TERMINATE */
+
     clearTimeout ( this.terminateTimeoutId );
+
+    this.terminateTimeoutId = undefined;
 
     /* RESETTING TASKS */
 
@@ -199,11 +198,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
     task.promise.finally ( () => {
 
-      if ( timeoutId ) {
-
-        clearTimeout ( timeoutId );
-
-      }
+      clearTimeout ( timeoutId );
 
       if ( this.terminated ) return;
 

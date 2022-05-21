@@ -15,11 +15,11 @@ class WorkerFrontend {
 
   /* CONSTRUCTOR */
 
-  constructor ( listener: Function, name: string ) {
+  constructor ( methods: string, name: string, listener: Function ) {
 
     const Worker = globalThis.Worker || WorkerShim; // Ensuring Electron is supported
 
-    const code = `data:text/javascript;charset=utf-8,${encodeURIComponent ( WorkerBackend )}`;
+    const code = `data:text/javascript;charset=utf-8,${encodeURIComponent ( WorkerBackend.replace ( '/*! METHODS_PLACEHOLDER !*/', `\n\n\n${methods}` ) )}`; //TODO: Use Blobs instead, maybe
 
     this.worker = new Worker ( code, { name, type: 'module' } );
 
