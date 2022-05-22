@@ -72,7 +72,7 @@ Static pools require a bundler plugin to make, the plugin allows you to move to 
 The following plugins are currently available:
 
 - **Esbuild**: [worktank-esbuild-plugin](https://github.com/fabiospampinato/worktank-esbuild-plugin), the official plugin for Esbuild.
-- **Vite**: [worktank-vite-loader](https://github.com/fabiospampinato/worktank-vite-loader), the official plugin for Vite.
+- **Vite**: [worktank-vite-plugin](https://github.com/fabiospampinato/worktank-vite-plugin), the official plugin for Vite.
 - **WebPack**: [worktank-loader](https://github.com/fabiospampinato/worktank-loader), the official plugin for WebPack, it only works with v1.x.x.
 
 Read their documentation to learn how to use them, but TL;DR: it's mostly just a matter of adding a couple of lines of configuration for your bundlers.
