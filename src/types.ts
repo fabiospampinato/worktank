@@ -1,7 +1,7 @@
 
 /* HELPERS */
 
-type FN = ( ...args: unknown[] ) => unknown;
+type FN = ( ...args: any[] ) => any;
 
 /* MESSAGES */
 
