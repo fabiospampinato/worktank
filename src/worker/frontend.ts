@@ -2,8 +2,8 @@
 /* IMPORT */
 
 import WorkerShim from 'webworker-shim';
-import WorkerBackend from './backend_compiled';
-import type {Message} from '../types';
+import WorkerBackend from '~/worker/backend_compiled';
+import type {Message} from '~/types';
 
 /* MAIN */
 

@@ -2,8 +2,8 @@
 /* IMPORT */
 
 import makeNakedPromise from 'promise-make-naked';
-import Worker from './worker';
-import type {FN, Methods, Options, Task} from './types';
+import Worker from '~/worker';
+import type {FN, Methods, Options, Task} from '~/types';
 
 /* MAIN */
 
@@ -220,7 +220,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   }
 
-};
+}
 
 /* EXPORT */
 
