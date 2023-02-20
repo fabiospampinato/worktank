@@ -7,7 +7,7 @@ A simple isomorphic library for executing functions inside WebWorkers or Node Th
 - **Small**: It's about as small as you can make it.
 - **Isomorphic**: It transparently uses WebWorkers if they are available, otherwise it uses Node's `worker_threads` module.
 - **Dynamic pools**: You can create pools dynamically, just by passing serializable functions to the library at run time, without needing any bundler plugins at all.
-- **Static pools**: You can create pools at build-time too, if the functions you need to send to workers require bundling, just by using the official [WebPack loader](https://github.com/fabiospampinato/worktank-loader).
+- **Static pools**: You can create pools at build-time too, if the functions you need to send to workers require bundling, just by using the official Vite [plugin](https://github.com/fabiospampinato/worktank-vite-plugin).
 - **Electron-ready**: Electron's special renderer process environment is supported out of the box too.
 - **TypeScript-ready**: Types come with the library and aren't an afterthought.
 
@@ -73,7 +73,6 @@ The following plugins are currently available:
 
 - **Esbuild**: [worktank-esbuild-plugin](https://github.com/fabiospampinato/worktank-esbuild-plugin), the official plugin for Esbuild.
 - **Vite**: [worktank-vite-plugin](https://github.com/fabiospampinato/worktank-vite-plugin), the official plugin for Vite.
-- **WebPack**: [worktank-loader](https://github.com/fabiospampinato/worktank-loader), the official plugin for WebPack, it only works with v1.x.x.
 
 Read their documentation to learn how to use them, but TL;DR: it's mostly just a matter of adding a couple of lines of configuration for your bundlers.
 
