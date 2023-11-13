@@ -46,7 +46,7 @@ type Options <MethodName extends string = string, MethodFunction extends FN = FN
   size?: number,
   timeout?: number,
   autoterminate?: number,
-  methods: Methods<MethodName, MethodFunction> | string
+  methods: Methods<MethodName, MethodFunction> | URL | string
 };
 
 type Task <MethodName extends string = string, MethodFunction extends FN = FN> = {
