@@ -68,11 +68,26 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   }
 
-  _getMethods ( methods: Methods<MethodName, MethodFunction> | string ): string {
+  _getMethods ( methods: Methods<MethodName, MethodFunction> | URL | string ): string {
 
-    if ( typeof methods === 'string' ) { // Already serialized methods, useful for complex and/or bundled workers
+    if ( typeof methods === 'string' ) { // Already serialized methods, or URL to import, useful for complex and/or bundled workers
 
-      return methods;
+      if ( /^(file|https?):\/\//.test ( methods ) ) { // URL to import
+
+        const methodsImport = `${'import'} * as Methods ${'from'} '${methods}';`;
+        const methodsRegister = `Object.entries ( Methods ).forEach ( ([ name, fn ]) => typeof fn === 'function' && WorkTankWorkerBackend.register ( name, fn ) );`;
+
+        return `${methodsImport}\n\n${methodsRegister}`;
+
+      } else { // Serialized methods
+
+        return methods;
+
+      }
+
+    } else if ( methods instanceof URL ) { // URL to import
+
+      return this._getMethods ( methods.href );
 
     } else { // Serializable methods
 

@@ -3,6 +3,7 @@
 
 import {describe} from 'fava';
 import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import WorkTank from '../dist/index.js';
 
 /* MAIN */
@@ -11,7 +12,7 @@ import WorkTank from '../dist/index.js';
 
 describe ( 'WorkTank', it => {
 
-  it ( 'can execute a passed method', async t => {
+  it ( 'can execute passed methods', async t => {
 
     const pool = new WorkTank ({
       name: 'example',
@@ -24,6 +25,25 @@ describe ( 'WorkTank', it => {
           return a + b;
         }
       }
+    });
+
+    const sumResult = await pool.exec ( 'sum', [10, 20] );
+
+    t.is ( sumResult, 30 );
+
+    const sepResult = await pool.exec ( 'sep' );
+
+    t.is ( sepResult, path.sep );
+
+    pool.terminate ();
+
+  });
+
+  it ( 'can execute imported methods', async t => {
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: pathToFileURL ( path.resolve ( './test/worker.js' ) )
     });
 
     const sumResult = await pool.exec ( 'sum', [10, 20] );
