@@ -3,7 +3,7 @@
 
 import makeNakedPromise from 'promise-make-naked';
 import Worker from '~/worker';
-import type {Methods, MethodsNames, MethodArguments, MethodReturn, Options, Task} from '~/types';
+import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Options, Task} from '~/types';
 
 /* MAIN */
 
@@ -148,6 +148,25 @@ class WorkTank<T extends Methods> {
     this._autoterminate ();
 
     return promise;
+
+  }
+
+  proxy (): MethodsProxied<T> {
+
+    return new Proxy ( {} as MethodsProxied<T>, {
+
+      get: <U extends MethodsNames<T>> ( _: unknown, method: U | symbol | number ): MethodProxied<MethodFunction<T, U>> => {
+
+        if ( typeof method !== 'string' ) throw new Error ( 'Unsupported method name' );
+
+        return ( ...args: MethodArguments<T, U> ): Promise<Awaited<MethodReturn<T, U>>> => {
+
+          return this.exec ( method, args );
+
+        };
+
+      }
+    });
 
   }
 

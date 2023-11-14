@@ -58,4 +58,33 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'can return a proxy to the pooled methods', async t => {
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: {
+        sep: async () => {
+          const {default: path} = await import ( 'node:path' );
+          return path.sep;
+        },
+        sum: ( a, b ) => {
+          return a + b;
+        }
+      }
+    });
+
+    const proxy = pool.proxy ();
+
+    const sumResult = await proxy.sum ( 10, 20 );
+
+    t.is ( sumResult, 30 );
+
+    const sepResult = await proxy.sep ();
+
+    t.is ( sepResult, path.sep );
+
+    pool.terminate ();
+
+  });
+
 });

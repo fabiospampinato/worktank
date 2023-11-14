@@ -45,11 +45,15 @@ type MethodsNames<T extends Methods> = keyof T;
 
 type MethodsFunctions<T extends Methods> = T[keyof T];
 
+type MethodsProxied<T extends Methods> = { [K in keyof T]: (...args: Parameters<T[K]>) => Promise<Awaited<ReturnType<T[K]>>> };
+
 type MethodFunction<T extends Methods, U extends MethodsNames<T>> = T[U];
 
 type MethodArguments<T extends Methods, U extends MethodsNames<T>> = Parameters<MethodFunction<T, U>>;
 
 type MethodReturn<T extends Methods, U extends MethodsNames<T>> = ReturnType<MethodFunction<T, U>>;
+
+type MethodProxied<T extends FN> = (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>;
 
 /* POOL */
 
@@ -73,5 +77,5 @@ type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
 
 export type {FN};
 export type {MessageExec, MessageInit, MessageReady, MessageResult, Message};
-export type {Methods, MethodsNames, MethodsFunctions, MethodFunction, MethodArguments, MethodReturn};
+export type {Methods, MethodsNames, MethodsFunctions, MethodsProxied, MethodFunction, MethodArguments, MethodReturn, MethodProxied};
 export type {Options, Task};
