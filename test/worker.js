@@ -13,6 +13,10 @@ const sum = ( a, b ) => {
   return a + b;
 };
 
+const exception = () => {
+  throw new Error ();
+};
+
 /* EXPORT */
 
-export {sep, sum};
+export {sep, sum, exception};

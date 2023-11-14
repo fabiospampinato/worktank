@@ -230,7 +230,7 @@ class WorkTank<T extends Methods> {
 
     }
 
-    task.promise.finally ( () => {
+    const onFinally = (): void => {
 
       clearTimeout ( timeoutId );
 
@@ -248,7 +248,9 @@ class WorkTank<T extends Methods> {
 
       this.tick ();
 
-    });
+    };
+
+    task.promise.then ( onFinally, onFinally );
 
     worker.exec ( task );
 

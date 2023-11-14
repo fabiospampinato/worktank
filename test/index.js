@@ -14,6 +14,8 @@ describe ( 'WorkTank', it => {
 
   it ( 'can execute passed methods', async t => {
 
+    t.plan ( 3 );
+
     const pool = new WorkTank ({
       name: 'example',
       methods: {
@@ -35,11 +37,23 @@ describe ( 'WorkTank', it => {
 
     t.is ( sepResult, path.sep );
 
+    try {
+
+      await pool.exec ( 'exception' );
+
+    } catch ( error ) {
+
+      t.true ( error instanceof Error );
+
+    }
+
     pool.terminate ();
 
   });
 
   it ( 'can execute imported methods', async t => {
+
+    t.plan ( 3 );
 
     const pool = new WorkTank ({
       name: 'example',
@@ -54,11 +68,23 @@ describe ( 'WorkTank', it => {
 
     t.is ( sepResult, path.sep );
 
+    try {
+
+      await pool.exec ( 'exception' );
+
+    } catch ( error ) {
+
+      t.true ( error instanceof Error );
+
+    }
+
     pool.terminate ();
 
   });
 
   it ( 'can return a proxy to the pooled methods', async t => {
+
+    t.plan ( 3 );
 
     const pool = new WorkTank ({
       name: 'example',
@@ -69,6 +95,9 @@ describe ( 'WorkTank', it => {
         },
         sum: ( a, b ) => {
           return a + b;
+        },
+        exception: () => {
+          throw new Error ();
         }
       }
     });
@@ -82,6 +111,16 @@ describe ( 'WorkTank', it => {
     const sepResult = await proxy.sep ();
 
     t.is ( sepResult, path.sep );
+
+    try {
+
+      await proxy.exception ();
+
+    } catch ( error ) {
+
+      t.true ( error instanceof Error );
+
+    }
 
     pool.terminate ();
 
