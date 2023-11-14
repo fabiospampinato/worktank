@@ -3,11 +3,11 @@
 
 import makeNakedPromise from 'promise-make-naked';
 import Worker from '~/worker';
-import type {FN, Methods, Options, Task} from '~/types';
+import type {Methods, MethodsNames, MethodArguments, MethodReturn, Options, Task} from '~/types';
 
 /* MAIN */
 
-class WorkTank <MethodName extends string, MethodFunction extends FN> {
+class WorkTank<T extends Methods> {
 
   /* VARIABLES */
 
@@ -18,14 +18,14 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
   private name: string;
   private size: number;
   private methods: string;
-  private tasksBusy: Set<Task<MethodName, MethodFunction>>;
-  private tasksReady: Set<Task<MethodName, MethodFunction>>;
-  private workersBusy: Set<Worker<MethodName, MethodFunction>>;
-  private workersReady: Set<Worker<MethodName, MethodFunction>>;
+  private tasksBusy: Set<Task<T>>;
+  private tasksReady: Set<Task<T>>;
+  private workersBusy: Set<Worker<T>>;
+  private workersReady: Set<Worker<T>>;
 
   /* CONSTRUCTOR */
 
-  constructor ( options: Options<MethodName, MethodFunction> ) {
+  constructor ( options: Options<T> ) {
 
     this.terminated = true;
     this.timeout = options.timeout ?? Infinity;
@@ -42,7 +42,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   /* HELPERS */
 
-  _autoterminate (): void {
+  private _autoterminate (): void {
 
     if ( this.terminateTimeoutId ) return;
 
@@ -68,7 +68,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   }
 
-  _getMethods ( methods: Methods<MethodName, MethodFunction> | URL | string ): string {
+  private _getMethods ( methods: T | URL | string ): string {
 
     if ( typeof methods === 'string' ) { // Already serialized methods, or URL to import, useful for complex and/or bundled workers
 
@@ -92,7 +92,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
     } else { // Serializable methods
 
       const names = Object.keys ( methods );
-      const values = Object.values<MethodFunction> ( methods );
+      const values = Object.values ( methods );
       const serialized = names.map ( ( name, index ) => `WorkTankWorkerBackend.register ( '${name}', ${values[index].toString ()} );` ).join ( '\n' );
 
       return serialized;
@@ -101,13 +101,13 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   }
 
-  _getTaskReady (): Task<MethodName, MethodFunction> | undefined {
+  private _getTaskReady (): Task<T> | undefined {
 
     for ( const task of this.tasksReady ) return task;
 
   }
 
-  _getWorkerName (): string {
+  private _getWorkerName (): string {
 
     if ( this.size < 2 ) return this.name;
 
@@ -117,7 +117,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   }
 
-  _getWorkerReady (): Worker<MethodName, MethodFunction> | undefined {
+  private _getWorkerReady (): Worker<T> | undefined {
 
     for ( const worker of this.workersReady ) return worker;
 
@@ -125,7 +125,7 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
     const name = this._getWorkerName ();
 
-    const worker = new Worker<MethodName, MethodFunction> ( this.methods, name );
+    const worker = new Worker<T> ( this.methods, name );
 
     this.workersReady.add ( worker );
 
@@ -135,9 +135,9 @@ class WorkTank <MethodName extends string, MethodFunction extends FN> {
 
   /* API */
 
-  exec ( method: MethodName, args: Parameters<Methods<MethodName, MethodFunction>[MethodName]> ): Promise<Awaited<ReturnType<Methods<MethodName, MethodFunction>[MethodName]>>> {
+  exec <U extends MethodsNames<T>> ( method: U, args: MethodArguments<T, U> ): Promise<Awaited<MethodReturn<T, U>>> {
 
-    const {promise, resolve, reject} = makeNakedPromise<any> ();
+    const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
     const task = { method, args, promise, resolve, reject };
 
     this.terminated = false;

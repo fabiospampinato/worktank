@@ -2,11 +2,11 @@
 /* IMPORT */
 
 import WorkerFrontend from '~/worker/frontend';
-import type {FN, Message, MessageReady, MessageResult, Task} from '~/types';
+import type {Message, MessageReady, MessageResult, Methods, Task} from '~/types';
 
 /* MAIN */
 
-class Worker <MethodName extends string, MethodFunction extends FN> {
+class Worker<T extends Methods> {
 
   /* VARIABLES */
 
@@ -16,7 +16,7 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
 
   private name: string;
   private methods: string;
-  private task?: Task<MethodName, MethodFunction>;
+  private task?: Task<T>;
   private worker: WorkerFrontend;
 
   /* CONSTRUCTOR */
@@ -83,7 +83,7 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
 
   }
 
-  exec ( task: Task<MethodName, MethodFunction> ): void {
+  exec ( task: Task<T> ): void {
 
     if ( this.terminated || this.task || this.busy ) throw new Error ( `WorkTank Worker (${this.name}): already busy or terminated` );
 
@@ -114,6 +114,8 @@ class Worker <MethodName extends string, MethodFunction extends FN> {
     if ( this.terminated || !this.loaded || !this.task || this.busy ) return;
 
     const {method, args} = this.task;
+
+    if ( typeof method !== 'string' ) throw new Error ( 'Unsupported method name' );
 
     this.busy = true;
 
