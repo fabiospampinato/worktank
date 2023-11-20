@@ -155,9 +155,11 @@ class WorkTank<T extends Methods> {
 
     return new Proxy ( {} as MethodsProxied<T>, {
 
-      get: <U extends MethodsNames<T>> ( _: unknown, method: U | symbol | number ): MethodProxied<MethodFunction<T, U>> => {
+      get: <U extends MethodsNames<T>> ( _: unknown, method: U | symbol | number ): MethodProxied<MethodFunction<T, U>> | undefined => {
 
         if ( typeof method !== 'string' ) throw new Error ( 'Unsupported method name' );
+
+        if ( method === 'then' ) return; //UGLY: Hacky limitation, because a wrapping Promise will lookup this property
 
         return ( ...args: MethodArguments<T, U> ): Promise<Awaited<MethodReturn<T, U>>> => {
 

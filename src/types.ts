@@ -45,7 +45,7 @@ type MethodsNames<T extends Methods> = keyof T;
 
 type MethodsFunctions<T extends Methods> = T[keyof T];
 
-type MethodsProxied<T extends Methods> = { [K in keyof T]: (...args: Parameters<T[K]>) => Promise<Awaited<ReturnType<T[K]>>> };
+type MethodsProxied<T extends Methods> = { [K in Exclude<keyof T, 'then'>]: (...args: Parameters<T[K]>) => Promise<Awaited<ReturnType<T[K]>>> };
 
 type MethodFunction<T extends Methods, U extends MethodsNames<T>> = T[U];
 
