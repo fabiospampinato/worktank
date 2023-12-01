@@ -34,6 +34,7 @@ const pool = new WorkTank ({
   name: 'example', // Name of the worker pool, useful for debugging purposes
   size: 5, // The maximum number of worker threads to spawn, they will only get spawned if actually needed
   timeout: 10000, // The maximum number of milliseconds to wait for the result from the worker, if exceeded the worker is terminated and the execution promise rejects
+  warmup: true, // Pre-spawn all the workers, so that they could be closer to being ready when needed
   autoterminate: 60000, // The interval of milliseconds at which to check if the pool can be automatically terminated, to free up resources, workers will be spawned up again if needed
   methods: { // An object mapping function names to functions objects to serialize and deserialize into each worker thread, only functions that don't depend on their closure can be serialized
     sum: function ( a: number, b: number ): Promise<number> {

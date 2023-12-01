@@ -61,6 +61,7 @@ type Options<T extends Methods> = {
   name?: string,
   size?: number,
   timeout?: number,
+  warmup?: boolean,
   autoterminate?: number,
   methods: T | URL | string
 };

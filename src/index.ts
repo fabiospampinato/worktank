@@ -38,6 +38,10 @@ class WorkTank<T extends Methods> {
     this.workersBusy = new Set ();
     this.workersReady = new Set ();
 
+    if ( options.warmup ) {
+      this._getWorkersWarm ();
+    }
+
   }
 
   /* HELPERS */
@@ -124,12 +128,24 @@ class WorkTank<T extends Methods> {
     if ( this.workersBusy.size >= this.size ) return;
 
     const name = this._getWorkerName ();
-
     const worker = new Worker<T> ( this.methods, name );
 
     this.workersReady.add ( worker );
 
     return worker;
+
+  }
+
+  private _getWorkersWarm (): void {
+
+    for ( let i = 0, l = this.size; i < l; i++ ) {
+
+      const name = this._getWorkerName ();
+      const worker = new Worker<T> ( this.methods, name );
+
+      this.workersReady.add ( worker );
+
+    }
 
   }
 
