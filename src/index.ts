@@ -279,3 +279,4 @@ class WorkTank<T extends Methods> {
 /* EXPORT */
 
 export default WorkTank;
+export type {Options};
