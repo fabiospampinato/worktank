@@ -31,7 +31,7 @@ class WorkTank<T extends Methods> {
     this.terminated = true;
     this.timeout = options.timeout ?? Infinity;
     this.terminateTimeout = options.autoterminate ?? 60000;
-    this.env = options.env || {};
+    this.env = { ...globalThis.process?.env, ...options.env };
     this.name = options.name ?? 'WorkTank-Worker';
     this.size = options.size ?? 1;
     this.methods = this._getMethods ( options.methods );
