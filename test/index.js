@@ -126,4 +126,26 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'can pass custom environment variables to workers', async t => {
+
+    const pool = new WorkTank ({
+      name: 'example',
+      env: {
+        CUSTOM_ENV: '123'
+      },
+      methods: {
+        getEnv: () => {
+          return globalThis.process.env.CUSTOM_ENV;
+        }
+      }
+    });
+
+    const value = await pool.exec ( 'getEnv' );
+
+    t.is ( value, '123' );
+
+    pool.terminate ();
+
+  });
+
 });

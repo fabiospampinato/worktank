@@ -2,7 +2,7 @@
 /* IMPORT */
 
 import WorkerFrontend from '~/worker/frontend';
-import type {Message, MessageReady, MessageResult, Methods, Task} from '~/types';
+import type {Message, MessageReady, MessageResult, Methods, Env, Task} from '~/types';
 
 /* MAIN */
 
@@ -14,6 +14,7 @@ class Worker<T extends Methods> {
   public loaded: boolean;
   public terminated: boolean;
 
+  private env: Env;
   private name: string;
   private methods: string;
   private task?: Task<T>;
@@ -21,14 +22,15 @@ class Worker<T extends Methods> {
 
   /* CONSTRUCTOR */
 
-  constructor ( methods: string, name: string ) {
+  constructor ( env: Env, methods: string, name: string ) {
 
     this.busy = false;
     this.loaded = false;
     this.terminated = false;
+    this.env = env;
     this.name = name;
     this.methods = methods;
-    this.worker = new WorkerFrontend ( this.methods, this.name, this.onMessage.bind ( this ) );
+    this.worker = new WorkerFrontend ( this.env, this.methods, this.name, this.onMessage.bind ( this ) );
 
     this.init ();
 

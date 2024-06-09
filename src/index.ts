@@ -3,7 +3,7 @@
 
 import makeNakedPromise from 'promise-make-naked';
 import Worker from '~/worker';
-import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Options, Task} from '~/types';
+import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Options, Task} from '~/types';
 
 /* MAIN */
 
@@ -15,6 +15,7 @@ class WorkTank<T extends Methods> {
   private terminateTimeout: number;
   private terminateTimeoutId?: ReturnType<typeof setTimeout>;
   private timeout: number;
+  private env: Env;
   private name: string;
   private size: number;
   private methods: string;
@@ -30,6 +31,7 @@ class WorkTank<T extends Methods> {
     this.terminated = true;
     this.timeout = options.timeout ?? Infinity;
     this.terminateTimeout = options.autoterminate ?? 60000;
+    this.env = options.env || {};
     this.name = options.name ?? 'WorkTank-Worker';
     this.size = options.size ?? 1;
     this.methods = this._getMethods ( options.methods );
@@ -128,7 +130,7 @@ class WorkTank<T extends Methods> {
     if ( this.workersBusy.size >= this.size ) return;
 
     const name = this._getWorkerName ();
-    const worker = new Worker<T> ( this.methods, name );
+    const worker = new Worker<T> ( this.env, this.methods, name );
 
     this.workersReady.add ( worker );
 
@@ -141,7 +143,7 @@ class WorkTank<T extends Methods> {
     for ( let i = 0, l = this.size; i < l; i++ ) {
 
       const name = this._getWorkerName ();
-      const worker = new Worker<T> ( this.methods, name );
+      const worker = new Worker<T> ( this.env, this.methods, name );
 
       this.workersReady.add ( worker );
 

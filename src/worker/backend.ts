@@ -66,6 +66,12 @@ globalThis['WorkTankWorkerBackend'] = new class {
 
 }
 
-/* PLACEHOLDER */
+/* PLACEHOLDERS */
+
+globalThis.process ||= {};
+globalThis.process.env = {
+  ...globalThis.process.env,
+  ...JSON.parse ( "/*! ENV_PLACEHOLDER !*/" )
+};
 
 /*! METHODS_PLACEHOLDER !*/

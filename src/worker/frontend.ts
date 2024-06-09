@@ -3,7 +3,7 @@
 
 import WorkerShim from 'webworker-shim';
 import WorkerBackend from '~/worker/backend_compiled';
-import type {Message} from '~/types';
+import type {Message, Env} from '~/types';
 
 /* MAIN */
 
@@ -15,9 +15,9 @@ class WorkerFrontend {
 
   /* CONSTRUCTOR */
 
-  constructor ( methods: string, name: string, listener: Function ) {
+  constructor ( env: Env, methods: string, name: string, listener: Function ) {
 
-    const code = `data:text/javascript;charset=utf-8,${encodeURIComponent ( WorkerBackend.replace ( '/*! METHODS_PLACEHOLDER !*/', `\n\n\n${methods}` ) )}`;
+    const code = `data:text/javascript;charset=utf-8,${encodeURIComponent ( WorkerBackend.replace ( '"/*! ENV_PLACEHOLDER !*/"', `'${JSON.stringify ( env )}'` ).replace ( '/*! METHODS_PLACEHOLDER !*/', `\n\n\n${methods}` ) )}`;
 
     this.worker = new WorkerShim ( code, { name, type: 'module' } );
 

@@ -57,7 +57,12 @@ type MethodProxied<T extends FN> = (...args: Parameters<T>) => Promise<Awaited<R
 
 /* POOL */
 
+type Env = Partial<{
+  [key: string]: string
+}>;
+
 type Options<T extends Methods> = {
+  env?: Env,
   name?: string,
   size?: number,
   timeout?: number,
@@ -79,4 +84,4 @@ type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
 export type {FN};
 export type {MessageExec, MessageInit, MessageReady, MessageResult, Message};
 export type {Methods, MethodsNames, MethodsFunctions, MethodsProxied, MethodFunction, MethodArguments, MethodReturn, MethodProxied};
-export type {Options, Task};
+export type {Env, Options, Task};
