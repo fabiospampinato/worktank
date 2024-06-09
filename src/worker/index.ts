@@ -32,8 +32,6 @@ class Worker<T extends Methods> {
     this.methods = methods;
     this.worker = new WorkerFrontend ( this.env, this.methods, this.name, this.onMessage.bind ( this ) );
 
-    this.init ();
-
   }
 
   /* EVENTS API */
@@ -78,12 +76,6 @@ class Worker<T extends Methods> {
   }
 
   /* API */
-
-  init (): void {
-
-    this.worker.send ({ type: 'init' });
-
-  }
 
   exec ( task: Task<T> ): void {
 

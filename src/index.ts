@@ -80,10 +80,11 @@ class WorkTank<T extends Methods> {
 
       if ( /^(file|https?):\/\//.test ( methods ) ) { // URL to import
 
-        const methodsImport = `${'import'} * as Methods ${'from'} '${methods}';`;
-        const methodsRegister = `Object.entries ( Methods ).forEach ( ([ name, fn ]) => typeof fn === 'function' && WorkTankWorkerBackend.register ( name, fn ) );`;
+        const register = `Object.entries ( Methods ).forEach ( ([ name, fn ]) => typeof fn === 'function' && WorkTankWorkerBackend.register ( name, fn ) );`;
+        const ready = 'WorkTankWorkerBackend.ready ();';
+        const load = `${'import'} ( '${methods}' ).then ( Methods => { \n${register}\n\n${ready}\n } );`;
 
-        return `${methodsImport}\n\n${methodsRegister}`;
+        return load;
 
       } else { // Serialized methods
 
@@ -99,9 +100,11 @@ class WorkTank<T extends Methods> {
 
       const names = Object.keys ( methods );
       const values = Object.values ( methods );
-      const serialized = names.map ( ( name, index ) => `WorkTankWorkerBackend.register ( '${name}', ${values[index].toString ()} );` ).join ( '\n' );
+      const register = names.map ( ( name, index ) => `WorkTankWorkerBackend.register ( '${name}', ${values[index].toString ()} );` ).join ( '\n' );
+      const ready = 'WorkTankWorkerBackend.ready ();';
+      const load = `${register}\n\n${ready}`;
 
-      return serialized;
+      return load;
 
     }
 

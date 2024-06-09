@@ -44,17 +44,19 @@ globalThis['WorkTankWorkerBackend'] = new class {
 
   }
 
-  init (): void {
+  message ( message: Event & { data: Message } ): void {
 
-    postMessage ({ type: 'ready' });
+    if ( message.data.type === 'exec' ) {
+
+      return this.exec ( message.data.method, message.data.args );
+
+    }
 
   }
 
-  message ( message: Event & { data: Message } ): void {
+  ready (): void {
 
-    if ( message.data.type === 'init' ) return this.init ();
-
-    if ( message.data.type === 'exec' ) return this.exec ( message.data.method, message.data.args );
+    postMessage ({ type: 'ready' });
 
   }
 

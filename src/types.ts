@@ -11,10 +11,6 @@ type MessageExec = {
   args: any[]
 };
 
-type MessageInit = {
-  type: 'init'
-};
-
 type MessageReady = {
   type: 'ready'
 };
@@ -35,7 +31,7 @@ type MessageResultError = {
 
 type MessageResult = MessageResultSuccess | MessageResultError;
 
-type Message = MessageExec | MessageInit | MessageReady | MessageResult;
+type Message = MessageExec | MessageReady | MessageResult;
 
 /* METHODS */
 
@@ -82,6 +78,6 @@ type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
 /* EXPORT */
 
 export type {FN};
-export type {MessageExec, MessageInit, MessageReady, MessageResult, Message};
+export type {MessageExec, MessageReady, MessageResult, Message};
 export type {Methods, MethodsNames, MethodsFunctions, MethodsProxied, MethodFunction, MethodArguments, MethodReturn, MethodProxied};
 export type {Env, Options, Task};
