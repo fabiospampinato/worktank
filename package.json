@@ -2,7 +2,7 @@
   "name": "worktank",
   "repository": "github:fabiospampinato/worktank",
   "description": "A simple isomorphic library for executing functions inside WebWorkers or Node Threads pools.",
-  "version": "2.7.2",
+  "version": "2.7.3",
   "type": "module",
   "main": "dist/index.js",
   "exports": "./dist/index.js",
