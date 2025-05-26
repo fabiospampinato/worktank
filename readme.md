@@ -61,6 +61,15 @@ const result = await pool.exec (
 console.log ( result ); // 15
 ```
 
+Or you can get a proxy object to the supported methods, for convenience:
+
+```ts
+const proxy = pool.proxy ();
+const result = await proxy.sum ( 10, 5 );
+
+console.log ( result ); // 15
+```
+
 Lastly once you are done with the pool you can call `terminate` on it to end all the worker threads the pool spawned and free up some memory, if you call `exec` on the pool again after having called `terminate` on it the needed worker threads will be spawned up again:
 
 ```ts
