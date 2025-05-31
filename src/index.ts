@@ -3,7 +3,7 @@
 
 import makeNakedPromise from 'promise-make-naked';
 import Worker from '~/worker';
-import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Options, Task} from '~/types';
+import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Info, Options, Task} from '~/types';
 
 /* MAIN */
 
@@ -169,6 +169,21 @@ class WorkTank<T extends Methods> {
     this._autoterminate ();
 
     return promise;
+
+  }
+
+  info (): Info {
+
+    return {
+      tasks: {
+        busy: this.tasksBusy.size,
+        ready: this.tasksReady.size
+      },
+      workers: {
+        busy: this.workersBusy.size,
+        ready: this.workersReady.size
+      }
+    };
 
   }
 
