@@ -256,6 +256,32 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'supports exec-level timeouts', async t => {
+
+    t.plan ( 3 );
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS
+    });
+
+    try {
+
+      await pool.exec ( 'sleep', [1000], { timeout: 100 } );
+
+    } catch ( error ) {
+
+      t.true ( error instanceof WorkerError );
+      t.is ( error.message, 'Terminated' );
+
+      t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
+
+    }
+
+    pool.terminate ();
+
+  });
+
   it ( 'supports handling and recovering from a worker existing unexpectedly', async t => {
 
     t.plan ( 4 );

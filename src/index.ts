@@ -5,7 +5,7 @@ import {setInterval, clearInterval, unrefInterval} from 'isotimer';
 import makeNakedPromise from 'promise-make-naked';
 import Worker from './worker';
 import WorkerError from './worker/error';
-import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Options, Stats, Task} from './types';
+import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, ExecOptions, Options, Stats, Task} from './types';
 
 /* HELPERS */
 
@@ -188,10 +188,11 @@ class WorkTank<T extends Methods> {
 
   //TODO: Options: timeout, abortSignal, transferList
 
-  exec = <U extends MethodsNames<T>> ( method: U, args: MethodArguments<T, U> ): Promise<Awaited<MethodReturn<T, U>>> => {
+  exec = <U extends MethodsNames<T>> ( method: U, args: MethodArguments<T, U>, options?: ExecOptions ): Promise<Awaited<MethodReturn<T, U>>> => {
 
     const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
-    const task = { method, args, promise, resolve, reject };
+    const timeout = options?.timeout ?? this.timeout;
+    const task = { method, args, timeout, promise, resolve, reject };
 
     this.tasksIdle.add ( task );
 
@@ -281,9 +282,9 @@ class WorkTank<T extends Methods> {
 
     let timeoutId: ReturnType<typeof setTimeout>;
 
-    if ( this.timeout > 0 && this.timeout !== Infinity ) {
+    if ( task.timeout > 0 && task.timeout !== Infinity ) {
 
-      timeoutId = setTimeout ( worker.terminate, this.timeout );
+      timeoutId = setTimeout ( worker.terminate, task.timeout );
 
     }
 
@@ -320,4 +321,4 @@ class WorkTank<T extends Methods> {
 
 export default WorkTank;
 export {WorkerError};
-export type {Options};
+export type {ExecOptions, Options};

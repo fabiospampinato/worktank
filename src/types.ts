@@ -62,6 +62,10 @@ type Env = Partial<{
   [key: string]: string
 }>;
 
+type ExecOptions = {
+  timeout?: number
+};
+
 type Options<T extends Methods> = {
   env?: Env,
   name?: string,
@@ -88,6 +92,7 @@ type Stats = {
 type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
   method: U,
   args: MethodArguments<T, U>,
+  timeout: number,
   promise: Promise<Awaited<MethodReturn<T, U>>>,
   resolve: ( result: MethodReturn<T, U> ) => void,
   reject: ( error: Error ) => void
@@ -98,4 +103,4 @@ type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
 export type {FN};
 export type {MessageExec, MessageLog, MessageReady, MessageResult, Message};
 export type {Methods, MethodsNames, MethodsFunctions, MethodsProxied, MethodFunction, MethodArguments, MethodReturn, MethodProxied};
-export type {Env, Options, Stats, Task};
+export type {Env, ExecOptions, Options, Stats, Task};
