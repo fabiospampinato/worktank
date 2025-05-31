@@ -28,6 +28,10 @@ const sum = ( a, b ) => {
   return a + b;
 };
 
+const unserializable = () => {
+  return () => {};
+};
+
 /* EXPORT */
 
-export {exit, exception, ping, sep, sleep, sum};
+export {exit, exception, ping, sep, sleep, sum, unserializable};

@@ -159,7 +159,20 @@ class Worker<T extends Methods> {
 
     this.busy = true;
 
-    this.worker.send ({ type: 'exec', method, args });
+    try {
+
+      this.worker.send ({ type: 'exec', method, args });
+
+    } catch {
+
+      const error = new Error ( `WorkTank Worker (${this.name}): failed to send message` );
+
+      this.task.reject ( error );
+
+      this.busy = false;
+      this.task = undefined;
+
+    }
 
   }
 
