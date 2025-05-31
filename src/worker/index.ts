@@ -42,9 +42,9 @@ class Worker<T extends Methods> {
 
     if ( this.terminated ) return;
 
+    this.terminated = true;
+
     this.worker.terminate ();
-    this.worker = new WorkerFrontend ( this.name, this.bootloader, this.onClose, this.onMessage );
-    this.ready = false;
 
     this.reject ( new WorkerError ( this.name, `Exited with exit code ${code}` ) );
 

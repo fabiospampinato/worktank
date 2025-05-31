@@ -274,7 +274,7 @@ describe ( 'WorkTank', it => {
       t.true ( error instanceof WorkerError );
       t.is ( error.message, 'Exited with exit code 2' );
 
-      t.like ( pool.stats ().workers, { busy: 0, idle: 1 } );
+      t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
 
     }
 
