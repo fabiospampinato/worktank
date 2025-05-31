@@ -261,19 +261,19 @@ class WorkTank<T extends Methods> {
 
   tick = (): void => {
 
-    const worker = this.getWorkerIdle ();
-
-    if ( !worker ) return;
-
     const task = this.getTaskIdle ();
 
     if ( !task ) return;
 
-    this.workersIdle.delete ( worker );
-    this.workersBusy.add ( worker );
+    const worker = this.getWorkerIdle ();
+
+    if ( !worker ) return;
 
     this.tasksIdle.delete ( task );
     this.tasksBusy.add ( task );
+
+    this.workersIdle.delete ( worker );
+    this.workersBusy.add ( worker );
 
     let timeoutId: ReturnType<typeof setTimeout>;
 
