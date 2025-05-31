@@ -244,7 +244,7 @@ describe ( 'WorkTank', it => {
       t.true ( error instanceof WorkerError );
       t.is ( error.message, 'Terminated' );
 
-      t.like ( pool.stats ().workers, { busy: 0, idle: 1 } );
+      t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
 
     }
 

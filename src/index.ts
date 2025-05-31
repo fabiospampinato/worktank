@@ -239,7 +239,7 @@ class WorkTank<T extends Methods> {
 
   terminate = (): void => {
 
-    /* RESETTING TASKS */
+    /* TERMINATING TASKS */
 
     const error = new WorkerError ( this.name, 'Terminated' );
 
@@ -249,7 +249,7 @@ class WorkTank<T extends Methods> {
     this.tasksBusy = new Set ();
     this.tasksIdle = new Set ();
 
-    /* RESETTING WORKERS */
+    /* TERMINATING WORKERS */
 
     for ( const worker of this.workersBusy ) worker.terminate ();
     for ( const worker of this.workersIdle ) worker.terminate ();
@@ -260,6 +260,8 @@ class WorkTank<T extends Methods> {
   }
 
   tick = (): void => {
+
+    /* GETTING TASK & WORKER */
 
     const task = this.getTaskIdle ();
 
@@ -275,24 +277,23 @@ class WorkTank<T extends Methods> {
     this.workersIdle.delete ( worker );
     this.workersBusy.add ( worker );
 
+    /* TIMEOUT */
+
     let timeoutId: ReturnType<typeof setTimeout>;
 
     if ( this.timeout > 0 && this.timeout !== Infinity ) {
 
-      const timeout = Math.min ( 2147483647, this.timeout );
-
-      timeoutId = setTimeout ( (): void => {
-
-        worker.terminate ();
-
-      }, timeout );
+      timeoutId = setTimeout ( worker.terminate, this.timeout );
 
     }
+
+    /* CLEAN UP */
 
     const onFinally = (): void => {
 
       clearTimeout ( timeoutId );
 
+      this.tasksBusy.delete ( task );
       this.workersBusy.delete ( worker );
 
       if ( !worker.terminated ) {
@@ -301,13 +302,13 @@ class WorkTank<T extends Methods> {
 
       }
 
-      this.tasksBusy.delete ( task );
-
       this.tick ();
 
     };
 
     task.promise.then ( onFinally, onFinally );
+
+    /* EXECUTING */
 
     worker.exec ( task );
 
