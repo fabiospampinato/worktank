@@ -1,6 +1,7 @@
 
 /* IMPORT */
 
+import WorkerError from './error';
 import WorkerFrontend from './frontend';
 import type {Message, MessageLog, MessageReady, MessageResult, Methods, Task} from '../types';
 
@@ -29,15 +30,7 @@ class Worker<T extends Methods> {
 
     this.name = name;
     this.bootloader = bootloader;
-    this.worker = this._getWorker ();
-
-  }
-
-  /* PRIVATE API */
-
-  private _getWorker (): WorkerFrontend {
-
-    return new WorkerFrontend ( this.name, this.bootloader, this.onClose, this.onMessage );
+    this.worker = new WorkerFrontend ( this.name, this.bootloader, this.onClose, this.onMessage );
 
   }
 
@@ -48,25 +41,16 @@ class Worker<T extends Methods> {
     if ( this.terminated ) return;
 
     this.worker.terminate ();
-    this.worker = this._getWorker ();
+    this.worker = new WorkerFrontend ( this.name, this.bootloader, this.onClose, this.onMessage );
     this.ready = false;
 
-    const {task} = this;
-
-    this.busy = false;
-    this.task = undefined;
-
-    if ( task ) {
-
-      const error = new Error ( `WorkTank Worker (${this.name}): closed unexpectedly with exit code ${code}` );
-
-      task.reject ( error );
-
-    }
+    this.reject ( new WorkerError ( this.name, `Exited with exit code ${code}` ) );
 
   }
 
   private onMessage = ( message: Message ): void => {
+
+    if ( this.terminated ) return;
 
     if ( message.type === 'log' ) {
 
@@ -100,22 +84,15 @@ class Worker<T extends Methods> {
 
   private onMessageResult = ( message: MessageResult ): void => {
 
-    const {task} = this;
-
-    if ( !task ) throw new Error ( `WorkTank Worker (${this.name}): missing task` );
-
-    this.busy = false;
-    this.task = undefined;
-
     if ( 'value' in message ) { // Success
 
-      task.resolve ( message.value );
+      this.resolve ( message.value );
 
     } else { // Error
 
       const error = Object.assign ( new Error (), message.error );
 
-      task.reject ( error );
+      this.reject ( error );
 
     }
 
@@ -125,11 +102,39 @@ class Worker<T extends Methods> {
 
   exec = ( task: Task<T> ): void => {
 
-    if ( this.terminated || this.task || this.busy ) throw new Error ( `WorkTank Worker (${this.name}): already busy or terminated` );
+    if ( this.terminated ) throw new WorkerError ( this.name, 'Terminated' );
+
+    if ( this.task || this.busy ) throw new WorkerError ( this.name, 'Busy' );
 
     this.task = task;
 
     this.tick ();
+
+  }
+
+  reject = ( error: Error ): void => {
+
+    const {task} = this;
+
+    if ( !task ) return;
+
+    this.busy = false;
+    this.task = undefined;
+
+    task.reject ( error );
+
+  }
+
+  resolve = ( value: any ): void => {
+
+    const {task} = this;
+
+    if ( !task ) return;
+
+    this.busy = false;
+    this.task = undefined;
+
+    task.resolve ( value );
 
   }
 
@@ -141,13 +146,7 @@ class Worker<T extends Methods> {
 
     this.worker.terminate ();
 
-    if ( this.task ) {
-
-      const error = new Error ( `WorkTank Worker (${this.name}): terminated` );
-
-      this.task.reject ( error );
-
-    }
+    this.reject ( new WorkerError ( this.name, 'Terminated' ) );
 
   }
 
@@ -155,22 +154,17 @@ class Worker<T extends Methods> {
 
     if ( this.terminated || !this.ready || !this.task || this.busy ) return;
 
-    const {method, args} = this.task;
-
     this.busy = true;
 
     try {
+
+      const {method, args} = this.task;
 
       this.worker.send ({ type: 'exec', method, args });
 
     } catch {
 
-      const error = new Error ( `WorkTank Worker (${this.name}): failed to send message` );
-
-      this.task.reject ( error );
-
-      this.busy = false;
-      this.task = undefined;
+      this.reject ( new WorkerError ( this.name, 'Failed to send message' ) );
 
     }
 

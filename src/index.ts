@@ -3,6 +3,7 @@
 
 import makeNakedPromise from 'promise-make-naked';
 import Worker from './worker';
+import WorkerError from './worker/error';
 import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Info, Options, Task} from './types';
 
 /* MAIN */
@@ -222,7 +223,7 @@ class WorkTank<T extends Methods> {
 
     /* RESETTING TASKS */
 
-    const error = new Error ( 'WorkTank terminated!' );
+    const error = new WorkerError ( this.name, 'Terminated' );
 
     for ( const task of this.tasksBusy ) task.reject ( error );
     for ( const task of this.tasksReady ) task.reject ( error );
@@ -301,4 +302,5 @@ class WorkTank<T extends Methods> {
 /* EXPORT */
 
 export default WorkTank;
+export {WorkerError};
 export type {Options};

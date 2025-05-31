@@ -5,6 +5,7 @@ import {describe} from 'fava';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import WorkTank from '../dist/index.js';
+import WorkerError from '../dist/worker/error.js';
 import * as METHODS from './worker.js';
 
 /* HELPERS */
@@ -234,8 +235,8 @@ describe ( 'WorkTank', it => {
 
     } catch ( error ) {
 
-      t.true ( error instanceof Error );
-      t.true ( error.message.includes ( 'terminated' ) );
+      t.true ( error instanceof WorkerError );
+      t.is ( error.message, 'Terminated' );
 
       t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
 
@@ -264,8 +265,8 @@ describe ( 'WorkTank', it => {
 
     } catch ( error ) {
 
-      t.true ( error instanceof Error );
-      t.true ( error.message.includes ( 'closed unexpectedly with exit code 2' ) );
+      t.true ( error instanceof WorkerError );
+      t.is ( error.message, 'Exited with exit code 2' );
 
       t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
 
@@ -295,7 +296,7 @@ describe ( 'WorkTank', it => {
     } catch ( error ) {
 
       t.true ( error instanceof Error );
-      t.true ( error.message.includes ( 'could not be cloned' ) );
+      t.is ( error.message, '() => {} could not be cloned.' );
 
       t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
 
@@ -324,8 +325,8 @@ describe ( 'WorkTank', it => {
 
     } catch ( error ) {
 
-      t.true ( error instanceof Error );
-      t.true ( error.message.includes ( 'failed to send message' ) );
+      t.true ( error instanceof WorkerError );
+      t.is ( error.message, 'Failed to send message' );
 
       t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
 
