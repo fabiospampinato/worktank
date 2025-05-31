@@ -5,7 +5,7 @@ import {setInterval, clearInterval, unrefInterval} from 'isotimer';
 import makeNakedPromise from 'promise-make-naked';
 import Worker from './worker';
 import WorkerError from './worker/error';
-import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Info, Options, Task} from './types';
+import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Options, Stats, Task} from './types';
 
 /* HELPERS */
 
@@ -201,23 +201,6 @@ class WorkTank<T extends Methods> {
 
   }
 
-  info = (): Info => {
-
-    return {
-      tasks: {
-        busy: this.tasksBusy.size,
-        ready: this.tasksIdle.size,
-        total: this.tasksBusy.size + this.tasksIdle.size
-      },
-      workers: {
-        busy: this.workersBusy.size,
-        ready: this.workersIdle.size,
-        total: this.workersBusy.size + this.workersIdle.size
-      }
-    };
-
-  }
-
   proxy = (): MethodsProxied<T> => {
 
     return new Proxy ( {} as MethodsProxied<T>, {
@@ -234,6 +217,23 @@ class WorkTank<T extends Methods> {
 
       }
     });
+
+  }
+
+  stats = (): Stats => {
+
+    return {
+      tasks: {
+        busy: this.tasksBusy.size,
+        idle: this.tasksIdle.size,
+        total: this.tasksBusy.size + this.tasksIdle.size
+      },
+      workers: {
+        busy: this.workersBusy.size,
+        idle: this.workersIdle.size,
+        total: this.workersBusy.size + this.workersIdle.size
+      }
+    };
 
   }
 

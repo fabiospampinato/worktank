@@ -62,19 +62,6 @@ type Env = Partial<{
   [key: string]: string
 }>;
 
-type Info = {
-  tasks: {
-    busy: number,
-    ready: number,
-    total: number
-  },
-  workers: {
-    busy: number,
-    ready: number,
-    total: number
-  }
-};
-
 type Options<T extends Methods> = {
   env?: Env,
   name?: string,
@@ -83,6 +70,19 @@ type Options<T extends Methods> = {
   warmup?: boolean,
   autoterminate?: number,
   methods: T | URL | string
+};
+
+type Stats = {
+  tasks: {
+    busy: number,
+    idle: number,
+    total: number
+  },
+  workers: {
+    busy: number,
+    idle: number,
+    total: number
+  }
 };
 
 type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
@@ -98,4 +98,4 @@ type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
 export type {FN};
 export type {MessageExec, MessageLog, MessageReady, MessageResult, Message};
 export type {Methods, MethodsNames, MethodsFunctions, MethodsProxied, MethodFunction, MethodArguments, MethodReturn, MethodProxied};
-export type {Env, Info, Options, Task};
+export type {Env, Options, Stats, Task};

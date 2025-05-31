@@ -13,7 +13,7 @@ import * as METHODS from './worker.js';
 const waitIdle = pool => {
   return new Promise ( resolve => {
     const intervalId = setInterval ( () => {
-      if ( pool.info ().workers.busy === 0 ) {
+      if ( pool.stats ().workers.busy === 0 ) {
         clearInterval ( intervalId );
         resolve ();
       }
@@ -133,15 +133,15 @@ describe ( 'WorkTank', it => {
       size: 3
     });
 
-    t.like ( pool.info ().workers, { busy: 0, ready: 0 } );
+    t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
 
     await pool.exec ( 'ping' );
 
-    t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+    t.like ( pool.stats ().workers, { busy: 0, idle: 1 } );
 
     await pool.exec ( 'ping' );
 
-    t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+    t.like ( pool.stats ().workers, { busy: 0, idle: 1 } );
 
     pool.exec ( 'ping' );
     pool.exec ( 'ping' );
@@ -149,11 +149,11 @@ describe ( 'WorkTank', it => {
     pool.exec ( 'ping' );
     pool.exec ( 'ping' );
 
-    t.like ( pool.info ().workers, { busy: 3, ready: 0 } );
+    t.like ( pool.stats ().workers, { busy: 3, idle: 0 } );
 
     await waitIdle ( pool );
 
-    t.like ( pool.info ().workers, { busy: 0, ready: 3 } );
+    t.like ( pool.stats ().workers, { busy: 0, idle: 3 } );
 
     pool.terminate ();
 
@@ -168,7 +168,7 @@ describe ( 'WorkTank', it => {
       warmup: true
     });
 
-    t.like ( pool.info ().workers, { busy: 0, ready: 3 } );
+    t.like ( pool.stats ().workers, { busy: 0, idle: 3 } );
 
     pool.terminate ();
 
@@ -205,21 +205,21 @@ describe ( 'WorkTank', it => {
       autoterminate: 100
     });
 
-    t.like ( pool.info ().workers, { busy: 0, ready: 0 } );
+    t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
 
     pool.exec ( 'sleep', [300] );
 
     await pool.exec ( 'ping' );
 
-    t.like ( pool.info ().workers, { busy: 1, ready: 1 } );
+    t.like ( pool.stats ().workers, { busy: 1, idle: 1 } );
 
     await t.wait ( 200 );
 
-    t.like ( pool.info ().workers, { busy: 1, ready: 0 } );
+    t.like ( pool.stats ().workers, { busy: 1, idle: 0 } );
 
     await t.wait ( 300 );
 
-    t.like ( pool.info ().workers, { busy: 0, ready: 0 } );
+    t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
 
     pool.terminate ();
 
@@ -244,7 +244,7 @@ describe ( 'WorkTank', it => {
       t.true ( error instanceof WorkerError );
       t.is ( error.message, 'Terminated' );
 
-      t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+      t.like ( pool.stats ().workers, { busy: 0, idle: 1 } );
 
     }
 
@@ -274,7 +274,7 @@ describe ( 'WorkTank', it => {
       t.true ( error instanceof WorkerError );
       t.is ( error.message, 'Exited with exit code 2' );
 
-      t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+      t.like ( pool.stats ().workers, { busy: 0, idle: 1 } );
 
     }
 
@@ -304,7 +304,7 @@ describe ( 'WorkTank', it => {
       t.true ( error instanceof Error );
       t.is ( error.message, '() => {} could not be cloned.' );
 
-      t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+      t.like ( pool.stats ().workers, { busy: 0, idle: 1 } );
 
     }
 
@@ -334,7 +334,7 @@ describe ( 'WorkTank', it => {
       t.true ( error instanceof WorkerError );
       t.is ( error.message, 'Failed to send message' );
 
-      t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+      t.like ( pool.stats ().workers, { busy: 0, idle: 1 } );
 
     }
 
