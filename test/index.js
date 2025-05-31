@@ -5,6 +5,7 @@ import {describe} from 'fava';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import WorkTank from '../dist/index.js';
+import * as METHODS from './worker.js';
 
 /* MAIN */
 
@@ -12,21 +13,13 @@ import WorkTank from '../dist/index.js';
 
 describe ( 'WorkTank', it => {
 
-  it ( 'can execute passed methods', async t => {
+  it ( 'can execute serializable methods', async t => {
 
-    t.plan ( 3 );
+    t.plan ( 4 );
 
     const pool = new WorkTank ({
       name: 'example',
-      methods: {
-        sep: async () => {
-          const {default: path} = await import ( 'node:path' );
-          return path.sep;
-        },
-        sum: ( a, b ) => {
-          return a + b;
-        }
-      }
+      methods: METHODS
     });
 
     const sumResult = await pool.exec ( 'sum', [10, 20] );
@@ -44,6 +37,7 @@ describe ( 'WorkTank', it => {
     } catch ( error ) {
 
       t.true ( error instanceof Error );
+      t.is ( error.message, 'Worker exception' );
 
     }
 
@@ -53,7 +47,7 @@ describe ( 'WorkTank', it => {
 
   it ( 'can execute imported methods', async t => {
 
-    t.plan ( 3 );
+    t.plan ( 4 );
 
     const pool = new WorkTank ({
       name: 'example',
@@ -75,6 +69,7 @@ describe ( 'WorkTank', it => {
     } catch ( error ) {
 
       t.true ( error instanceof Error );
+      t.is ( error.message, 'Worker exception' );
 
     }
 
@@ -82,24 +77,13 @@ describe ( 'WorkTank', it => {
 
   });
 
-  it ( 'can return a proxy to the pooled methods', async t => {
+  it ( 'can execute methods via a proxy object', async t => {
 
-    t.plan ( 3 );
+    t.plan ( 4 );
 
     const pool = new WorkTank ({
       name: 'example',
-      methods: {
-        sep: async () => {
-          const {default: path} = await import ( 'node:path' );
-          return path.sep;
-        },
-        sum: ( a, b ) => {
-          return a + b;
-        },
-        exception: () => {
-          throw new Error ();
-        }
-      }
+      methods: METHODS,
     });
 
     const proxy = pool.proxy ();
@@ -119,6 +103,7 @@ describe ( 'WorkTank', it => {
     } catch ( error ) {
 
       t.true ( error instanceof Error );
+      t.is ( error.message, 'Worker exception' );
 
     }
 

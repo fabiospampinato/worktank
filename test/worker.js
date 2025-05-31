@@ -1,22 +1,23 @@
 
-/* IMPORT */
-
-import path from 'node:path';
-
 /* MAIN */
 
+const exception = () => {
+  throw new Error ( 'Worker exception' );
+};
+
+const exit = code => {
+  process.exit ( code );
+};
+
 const sep = async () => {
-  return path.sep;
+  const {sep} = await import ( 'node:path' );
+  return sep;
 };
 
 const sum = ( a, b ) => {
   return a + b;
 };
 
-const exception = () => {
-  throw new Error ();
-};
-
 /* EXPORT */
 
-export {sep, sum, exception};
+export {exit, exception, sep, sum};
