@@ -191,8 +191,9 @@ class WorkTank<T extends Methods> {
   exec = <U extends MethodsNames<T>> ( method: U, args: MethodArguments<T, U>, options?: ExecOptions ): Promise<Awaited<MethodReturn<T, U>>> => {
 
     const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
+    const signal = options?.signal;
     const timeout = options?.timeout ?? this.timeout;
-    const task = { method, args, timeout, promise, resolve, reject };
+    const task = { method, args, signal, timeout, promise, resolve, reject };
 
     this.tasksIdle.add ( task );
 
@@ -277,6 +278,14 @@ class WorkTank<T extends Methods> {
 
     this.workersIdle.delete ( worker );
     this.workersBusy.add ( worker );
+
+    /* SIGNAL */
+
+    if ( task.signal ) {
+
+      task.signal.addEventListener ( 'abort', worker.terminate, { once: true } );
+
+    }
 
     /* TIMEOUT */
 
