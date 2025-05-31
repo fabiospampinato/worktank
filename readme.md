@@ -14,7 +14,7 @@ A simple isomorphic library for executing functions inside WebWorkers or Node Th
 ## Install
 
 ```sh
-npm install --save worktank
+npm install worktank
 ```
 
 ## Usage
