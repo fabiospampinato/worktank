@@ -16,14 +16,16 @@ class WorkTank<T extends Methods> {
   private terminateTimeout: number;
   private terminateTimeoutId?: ReturnType<typeof setTimeout>;
   private timeout: number;
-  private env: Env;
+
   private name: string;
   private size: number;
+  private env: Env;
   private bootloader: string;
+
   private tasksBusy: Set<Task<T>>;
-  private tasksReady: Set<Task<T>>;
+  private tasksIdle: Set<Task<T>>;
   private workersBusy: Set<Worker<T>>;
-  private workersReady: Set<Worker<T>>;
+  private workersIdle: Set<Worker<T>>;
 
   /* CONSTRUCTOR */
 
@@ -32,17 +34,19 @@ class WorkTank<T extends Methods> {
     this.terminated = true;
     this.timeout = options.timeout ?? Infinity;
     this.terminateTimeout = options.autoterminate ?? 60000;
-    this.env = { ...globalThis.process?.env, ...options.env };
+
     this.name = options.name ?? 'WorkTank-Worker';
     this.size = options.size ?? 1;
-    this.bootloader = this._getWorkerBootloader ( this.env, options.methods );
+    this.env = { ...globalThis.process?.env, ...options.env };
+    this.bootloader = this.getWorkerBootloader ( this.env, options.methods );
+
     this.tasksBusy = new Set ();
-    this.tasksReady = new Set ();
+    this.tasksIdle = new Set ();
     this.workersBusy = new Set ();
-    this.workersReady = new Set ();
+    this.workersIdle = new Set ();
 
     if ( options.warmup ) {
-      this._getWorkersWarm ();
+      this.getWorkersWarm ();
     }
 
   }
@@ -53,7 +57,7 @@ class WorkTank<T extends Methods> {
 
     if ( this.terminateTimeoutId ) return;
 
-    if ( !this.tasksBusy.size && !this.tasksReady.size ) {
+    if ( !this.tasksBusy.size && !this.tasksIdle.size ) {
 
       this.terminateTimeoutId = undefined;
 
@@ -75,30 +79,34 @@ class WorkTank<T extends Methods> {
 
   }
 
-  private _getTaskReady = (): Task<T> | undefined => {
+  private getTaskIdle = (): Task<T> | undefined => {
 
-    for ( const task of this.tasksReady ) return task;
+    for ( const task of this.tasksIdle ) {
+
+      return task;
+
+    }
 
   }
 
-  private _getWorkerBootloader = ( envs: Env, methods: T | URL | string ): string => {
+  private getWorkerBootloader = ( env: Env, methods: T | URL | string ): string => {
 
     if ( methods instanceof URL ) { // URL object to import
 
-      return this._getWorkerBootloader ( envs, methods.href );
+      return this.getWorkerBootloader ( env, methods.href );
 
-    } else if ( typeof methods === 'string' ) { // Already serialized methods, or URL string to import, useful for complex and/or bundled workers
+    } else if ( typeof methods === 'string' ) { // URL string to import, or raw bootloader, useful for complex and/or bundled workers
 
       if ( /^(file|https?):\/\//.test ( methods ) ) { // URL string to import
 
-        const env = `WorkTankWorkerBackend.registerEnv ( ${JSON.stringify ( envs )} );`;
-        const register = `WorkTankWorkerBackend.registerMethods ( Methods );`;
+        const registerEnv = `WorkTankWorkerBackend.registerEnv ( ${JSON.stringify ( env )} );`;
+        const registerMethods = `WorkTankWorkerBackend.registerMethods ( Methods );`;
         const ready = 'WorkTankWorkerBackend.ready ();';
-        const load = `${env}\n\n${'import'} ( '${methods}' ).then ( Methods => { \n${register}\n\n${ready}\n } );`;
+        const bootloader = `${'import'} ( '${methods}' ).then ( Methods => { \n${registerEnv}\n\n${registerMethods}\n\n${ready}\n } );`;
 
-        return load;
+        return bootloader;
 
-      } else { // Serialized methods
+      } else { // Raw bootloader
 
         return methods;
 
@@ -106,52 +114,62 @@ class WorkTank<T extends Methods> {
 
     } else { // Serializable methods
 
-      const env = `WorkTankWorkerBackend.registerEnv ( ${JSON.stringify ( envs )} );`;
-      const names = Object.keys ( methods );
-      const values = Object.values ( methods );
-      const register = names.map ( ( name, index ) => `WorkTankWorkerBackend.registerMethods ({ ${name}: ${values[index].toString ()} });` ).join ( '\n' );
+      const registerEnv = `WorkTankWorkerBackend.registerEnv ( ${JSON.stringify ( env )} );`;
+      const serializedMethods = `{ ${Object.keys ( methods ).map ( name => `${name}: ${methods[name].toString ()}` ).join ( ',' )} }`;
+      const registerMethods = `WorkTankWorkerBackend.registerMethods ( ${serializedMethods} );`;
       const ready = 'WorkTankWorkerBackend.ready ();';
-      const load = `${env}\n\n${register}\n\n${ready}`;
+      const bootloader = `${registerEnv}\n\n${registerMethods}\n\n${ready}`;
 
-      return load;
+      return bootloader;
 
     }
 
   }
 
-  private _getWorkerName = (): string => {
+  private getWorkerIdle = (): Worker<T> | undefined => {
 
-    if ( this.size < 2 ) return this.name;
+    for ( const worker of this.workersIdle ) {
 
-    const counter = 1 + ( this.workersBusy.size + this.workersReady.size );
+      return worker;
 
-    return `${this.name} (${counter})`;
+    }
+
+    if ( this.workersBusy.size < this.size ) {
+
+      return this.getWorkerIdleNew ();
+
+    }
 
   }
 
-  private _getWorkerReady = (): Worker<T> | undefined => {
+  private getWorkerIdleNew = (): Worker<T> => {
 
-    for ( const worker of this.workersReady ) return worker;
-
-    if ( this.workersBusy.size >= this.size ) return;
-
-    const name = this._getWorkerName ();
+    const name = this.getWorkerName ();
     const worker = new Worker<T> ( name, this.bootloader );
 
-    this.workersReady.add ( worker );
+    this.workersIdle.add ( worker );
 
     return worker;
 
   }
 
-  private _getWorkersWarm = (): void => {
+  private getWorkerName = (): string => {
 
-    for ( let i = 0, l = this.size; i < l; i++ ) {
+    if ( this.size < 2 ) return this.name;
 
-      const name = this._getWorkerName ();
-      const worker = new Worker<T> ( name, this.bootloader );
+    const counter = 1 + ( this.workersBusy.size + this.workersIdle.size );
 
-      this.workersReady.add ( worker );
+    return `${this.name} (${counter})`;
+
+  }
+
+  private getWorkersWarm = (): void => {
+
+    const missingNr = this.size - this.workersBusy.size - this.workersIdle.size;
+
+    for ( let i = 0, l = missingNr; i < l; i++ ) {
+
+      this.getWorkerIdleNew ();
 
     }
 
@@ -165,7 +183,7 @@ class WorkTank<T extends Methods> {
     const task = { method, args, promise, resolve, reject };
 
     this.terminated = false;
-    this.tasksReady.add ( task );
+    this.tasksIdle.add ( task );
 
     this.tick ();
 
@@ -180,13 +198,13 @@ class WorkTank<T extends Methods> {
     return {
       tasks: {
         busy: this.tasksBusy.size,
-        ready: this.tasksReady.size,
-        total: this.tasksBusy.size + this.tasksReady.size
+        ready: this.tasksIdle.size,
+        total: this.tasksBusy.size + this.tasksIdle.size
       },
       workers: {
         busy: this.workersBusy.size,
-        ready: this.workersReady.size,
-        total: this.workersBusy.size + this.workersReady.size
+        ready: this.workersIdle.size,
+        total: this.workersBusy.size + this.workersIdle.size
       }
     };
 
@@ -226,35 +244,35 @@ class WorkTank<T extends Methods> {
     const error = new WorkerError ( this.name, 'Terminated' );
 
     for ( const task of this.tasksBusy ) task.reject ( error );
-    for ( const task of this.tasksReady ) task.reject ( error );
+    for ( const task of this.tasksIdle ) task.reject ( error );
 
     this.tasksBusy = new Set ();
-    this.tasksReady = new Set ();
+    this.tasksIdle = new Set ();
 
     /* RESETTING WORKERS */
 
     for ( const worker of this.workersBusy ) worker.terminate ();
-    for ( const worker of this.workersReady ) worker.terminate ();
+    for ( const worker of this.workersIdle ) worker.terminate ();
 
     this.workersBusy = new Set ();
-    this.workersReady = new Set ();
+    this.workersIdle = new Set ();
 
   }
 
   tick = (): void => {
 
-    const worker = this._getWorkerReady ();
+    const worker = this.getWorkerIdle ();
 
     if ( !worker ) return;
 
-    const task = this._getTaskReady ();
+    const task = this.getTaskIdle ();
 
     if ( !task ) return;
 
-    this.workersReady.delete ( worker );
+    this.workersIdle.delete ( worker );
     this.workersBusy.add ( worker );
 
-    this.tasksReady.delete ( task );
+    this.tasksIdle.delete ( task );
     this.tasksBusy.add ( task );
 
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -281,7 +299,7 @@ class WorkTank<T extends Methods> {
 
       if ( !worker.terminated ) {
 
-        this.workersReady.add ( worker );
+        this.workersIdle.add ( worker );
 
       }
 

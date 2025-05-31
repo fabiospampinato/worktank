@@ -8,7 +8,7 @@ type FN = ( ...args: any[] ) => any;
 type MessageExec = {
   type: 'exec',
   method: string,
-  args: any[]
+  args: unknown[]
 };
 
 type MessageLog = {
@@ -22,7 +22,7 @@ type MessageReady = {
 
 type MessageResultSuccess = {
   type: 'result',
-  value: any
+  value: unknown
 };
 
 type MessageResultError = {
