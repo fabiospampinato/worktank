@@ -195,9 +195,40 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'supports timing out executions and recovering from that', async t => {
+
+    t.plan ( 4 );
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS,
+      timeout: 100
+    });
+
+    try {
+
+      await pool.exec ( 'sleep', [1000] );
+
+    } catch ( error ) {
+
+      t.true ( error instanceof Error );
+      t.true ( error.message.includes ( 'terminated' ) );
+
+      t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+
+    }
+
+    const sumResult = await pool.exec ( 'sum', [10, 20] );
+
+    t.is ( sumResult, 30 );
+
+    pool.terminate ();
+
+  });
+
   it ( 'supports handling and recovering from a worker existing unexpectedly', async t => {
 
-    t.plan ( 3 );
+    t.plan ( 4 );
 
     const pool = new WorkTank ({
       name: 'example',
@@ -212,6 +243,8 @@ describe ( 'WorkTank', it => {
 
       t.true ( error instanceof Error );
       t.true ( error.message.includes ( 'closed unexpectedly with exit code 2' ) );
+
+      t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
 
     }
 

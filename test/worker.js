@@ -18,10 +18,16 @@ const sep = async () => {
   return sep;
 };
 
+const sleep = async ms => {
+  return new Promise ( resolve => {
+    setTimeout ( resolve, ms );
+  });
+};
+
 const sum = ( a, b ) => {
   return a + b;
 };
 
 /* EXPORT */
 
-export {exit, exception, ping, sep, sum};
+export {exit, exception, ping, sep, sleep, sum};
