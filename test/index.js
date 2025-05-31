@@ -195,6 +195,29 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'supports terminating workers automatically for inactivity', async t => {
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS,
+      size: 3,
+      autoterminate: 100
+    });
+
+    t.like ( pool.info ().workers, { busy: 0, ready: 0 } );
+
+    await pool.exec ( 'ping' );
+
+    t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+
+    await t.wait ( 100 );
+
+    t.like ( pool.info ().workers, { busy: 0, ready: 0 } );
+
+    pool.terminate ();
+
+  });
+
   it ( 'supports timing out executions and recovering from that', async t => {
 
     t.plan ( 4 );
