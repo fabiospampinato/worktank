@@ -30,11 +30,42 @@ class Worker<T extends Methods> {
     this.env = env;
     this.name = name;
     this.methods = methods;
-    this.worker = new WorkerFrontend ( this.env, this.methods, this.name, this.onMessage.bind ( this ) );
+    this.worker = this._getWorker ();
+
+  }
+
+  /* PRIVATE API */
+
+  private _getWorker (): WorkerFrontend {
+
+    return new WorkerFrontend ( this.env, this.methods, this.name, this.onClose.bind ( this ), this.onMessage.bind ( this ) );
 
   }
 
   /* EVENTS API */
+
+  onClose ( code: number ): void {
+
+    if ( this.terminated ) return;
+
+    this.worker.terminate ();
+    this.worker = this._getWorker ();
+    this.loaded = false;
+
+    const {task} = this;
+
+    this.busy = false;
+    this.task = undefined;
+
+    if ( task ) {
+
+      const error = new Error ( `WorkTank Worker (${this.name}): closed unexpectedly with exit code ${code}` );
+
+      return task.reject ( error );
+
+    }
+
+  }
 
   onMessage ( message: Message ): void {
 

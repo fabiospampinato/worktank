@@ -133,4 +133,32 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'can handle and recover from a worker existing unexpectedly', async t => {
+
+    t.plan ( 3 );
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: pathToFileURL ( path.resolve ( './test/worker.js' ) )
+    });
+
+    try {
+
+      await pool.exec ( 'exit', [2] );
+
+    } catch ( error ) {
+
+      t.true ( error instanceof Error );
+      t.true ( error.message.includes ( 'closed unexpectedly with exit code 2' ) );
+
+    }
+
+    const sumResult = await pool.exec ( 'sum', [10, 20] );
+
+    t.is ( sumResult, 30 );
+
+    pool.terminate ();
+
+  });
+
 });
