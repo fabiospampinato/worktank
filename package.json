@@ -2,6 +2,7 @@
   "name": "worktank",
   "repository": "github:fabiospampinato/worktank",
   "description": "A simple isomorphic library for executing functions inside WebWorkers or Node Threads pools.",
+  "license": "MIT",
   "version": "2.7.3",
   "type": "module",
   "main": "dist/index.js",
@@ -28,13 +29,13 @@
     "node"
   ],
   "dependencies": {
-    "promise-make-naked": "^2.0.0",
-    "webworker-shim": "^1.1.0"
+    "promise-make-naked": "^3.0.2",
+    "webworker-shim": "^1.1.2"
   },
   "devDependencies": {
-    "esbuild": "^0.19.0",
-    "fava": "^0.2.1",
-    "tsex": "^3.0.1",
-    "typescript": "^5.1.6"
+    "esbuild": "^0.25.5",
+    "fava": "^0.3.4",
+    "tsex": "^4.0.2",
+    "typescript": "^5.8.3"
   }
 }
