@@ -1,10 +1,15 @@
 
 /* IMPORT */
 
+import {setInterval, clearInterval, unrefInterval} from 'isotimer';
 import makeNakedPromise from 'promise-make-naked';
 import Worker from './worker';
 import WorkerError from './worker/error';
 import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Info, Options, Task} from './types';
+
+/* HELPERS */
+
+const clearIntervalRegistry = new FinalizationRegistry ( clearInterval );
 
 /* MAIN */
 
@@ -12,14 +17,13 @@ class WorkTank<T extends Methods> {
 
   /* VARIABLES */
 
-  private terminateTimeout: number;
-  private terminateTimeoutId?: ReturnType<typeof setTimeout>;
-  private timeout: number;
-
   private name: string;
   private size: number;
   private env: Env;
   private bootloader: string;
+
+  private timeout: number;
+  private autoterminateTimeout: number;
 
   private tasksBusy: Set<Task<T>>;
   private tasksIdle: Set<Task<T>>;
@@ -30,13 +34,13 @@ class WorkTank<T extends Methods> {
 
   constructor ( options: Options<T> ) {
 
-    this.timeout = options.timeout ?? Infinity;
-    this.terminateTimeout = options.autoterminate ?? 60000;
-
     this.name = options.name ?? 'WorkTank-Worker';
     this.size = options.size ?? 1;
     this.env = { ...globalThis.process?.env, ...options.env };
     this.bootloader = this.getWorkerBootloader ( this.env, options.methods );
+
+    this.timeout = options.timeout ?? Infinity;
+    this.autoterminateTimeout = options.autoterminate ?? 60_000;
 
     this.tasksBusy = new Set ();
     this.tasksIdle = new Set ();
@@ -47,35 +51,22 @@ class WorkTank<T extends Methods> {
       this.getWorkersWarm ();
     }
 
-  }
+    if ( this.autoterminateTimeout ) {
 
-  /* HELPERS */
+      const thizRef = new WeakRef ( this );
+      const intervalId = setInterval ( () => {
+        thizRef.deref ()?.cleanup ();
+      }, this.autoterminateTimeout );
 
-  private _autoterminate = (): void => {
+      unrefInterval ( intervalId );
 
-    if ( this.terminateTimeoutId ) return;
-
-    if ( !this.tasksBusy.size && !this.tasksIdle.size ) {
-
-      this.terminateTimeoutId = undefined;
-
-      this.terminate ();
-
-    } else {
-
-      const timeout = Math.min ( 2147483647, this.terminateTimeout );
-
-      this.terminateTimeoutId = setTimeout ( () => {
-
-        this.terminateTimeoutId = undefined;
-
-        this._autoterminate ();
-
-      }, timeout );
+      clearIntervalRegistry.register ( this, intervalId );
 
     }
 
   }
+
+  /* HELPERS */
 
   private getTaskIdle = (): Task<T> | undefined => {
 
@@ -175,6 +166,28 @@ class WorkTank<T extends Methods> {
 
   /* API */
 
+  cleanup = (): void => {
+
+    if ( this.autoterminateTimeout <= 0 ) return;
+
+    const autoterminateTimestamp = Date.now () - this.autoterminateTimeout;
+
+    for ( const worker of this.workersIdle ) {
+
+      if ( worker.ready && !worker.busy && worker.timestamp < autoterminateTimestamp ) {
+
+        worker.terminate ();
+
+        this.workersIdle.delete ( worker );
+
+      }
+
+    }
+
+  }
+
+  //TODO: Options: timeout, abortSignal, transferList
+
   exec = <U extends MethodsNames<T>> ( method: U, args: MethodArguments<T, U> ): Promise<Awaited<MethodReturn<T, U>>> => {
 
     const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
@@ -183,8 +196,6 @@ class WorkTank<T extends Methods> {
     this.tasksIdle.add ( task );
 
     this.tick ();
-
-    this._autoterminate ();
 
     return promise;
 
@@ -227,12 +238,6 @@ class WorkTank<T extends Methods> {
   }
 
   terminate = (): void => {
-
-    /* RESETTING AUTO-TERMINATE */
-
-    clearTimeout ( this.terminateTimeoutId );
-
-    this.terminateTimeoutId = undefined;
 
     /* RESETTING TASKS */
 

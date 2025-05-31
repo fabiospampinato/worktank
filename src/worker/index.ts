@@ -14,6 +14,7 @@ class Worker<T extends Methods> {
   public busy: boolean;
   public ready: boolean;
   public terminated: boolean;
+  public timestamp: number;
 
   private name: string;
   private bootloader: string;
@@ -27,6 +28,7 @@ class Worker<T extends Methods> {
     this.busy = false;
     this.ready = false;
     this.terminated = false;
+    this.timestamp = Date.now ();
 
     this.name = name;
     this.bootloader = bootloader;
@@ -120,6 +122,7 @@ class Worker<T extends Methods> {
 
     this.busy = false;
     this.task = undefined;
+    this.timestamp = Date.now ();
 
     task.reject ( error );
 
@@ -133,6 +136,7 @@ class Worker<T extends Methods> {
 
     this.busy = false;
     this.task = undefined;
+    this.timestamp = Date.now ();
 
     task.resolve ( value );
 

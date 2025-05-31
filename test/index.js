@@ -207,11 +207,17 @@ describe ( 'WorkTank', it => {
 
     t.like ( pool.info ().workers, { busy: 0, ready: 0 } );
 
+    pool.exec ( 'sleep', [300] );
+
     await pool.exec ( 'ping' );
 
-    t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+    t.like ( pool.info ().workers, { busy: 1, ready: 1 } );
 
-    await t.wait ( 100 );
+    await t.wait ( 200 );
+
+    t.like ( pool.info ().workers, { busy: 1, ready: 0 } );
+
+    await t.wait ( 300 );
 
     t.like ( pool.info ().workers, { busy: 0, ready: 0 } );
 
