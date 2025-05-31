@@ -279,6 +279,36 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'supports handling and recovering from receiving an unserializable value', async t => {
+
+    t.plan ( 4 );
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS
+    });
+
+    try {
+
+      await pool.exec ( 'unserializable', [] );
+
+    } catch ( error ) {
+
+      t.true ( error instanceof Error );
+      t.true ( error.message.includes ( 'could not be cloned' ) );
+
+      t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+
+    }
+
+    const sumResult = await pool.exec ( 'sum', [10, 20] );
+
+    t.is ( sumResult, 30 );
+
+    pool.terminate ();
+
+  });
+
   it ( 'supports handling and recovering from sending an unserializable value', async t => {
 
     t.plan ( 4 );
