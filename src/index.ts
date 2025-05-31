@@ -12,7 +12,6 @@ class WorkTank<T extends Methods> {
 
   /* VARIABLES */
 
-  private terminated: boolean;
   private terminateTimeout: number;
   private terminateTimeoutId?: ReturnType<typeof setTimeout>;
   private timeout: number;
@@ -31,7 +30,6 @@ class WorkTank<T extends Methods> {
 
   constructor ( options: Options<T> ) {
 
-    this.terminated = true;
     this.timeout = options.timeout ?? Infinity;
     this.terminateTimeout = options.autoterminate ?? 60000;
 
@@ -182,7 +180,6 @@ class WorkTank<T extends Methods> {
     const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
     const task = { method, args, promise, resolve, reject };
 
-    this.terminated = false;
     this.tasksIdle.add ( task );
 
     this.tick ();
@@ -230,8 +227,6 @@ class WorkTank<T extends Methods> {
   }
 
   terminate = (): void => {
-
-    this.terminated = true;
 
     /* RESETTING AUTO-TERMINATE */
 
@@ -292,8 +287,6 @@ class WorkTank<T extends Methods> {
     const onFinally = (): void => {
 
       clearTimeout ( timeoutId );
-
-      if ( this.terminated ) return;
 
       this.workersBusy.delete ( worker );
 
