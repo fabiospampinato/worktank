@@ -2,8 +2,8 @@
 /* IMPORT */
 
 import makeNakedPromise from 'promise-make-naked';
-import Worker from '~/worker';
-import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Info, Options, Task} from '~/types';
+import Worker from './worker';
+import type {Methods, MethodsNames, MethodsProxied, MethodArguments, MethodFunction, MethodReturn, MethodProxied, Env, Info, Options, Task} from './types';
 
 /* MAIN */
 

@@ -1,8 +1,8 @@
 
 /* IMPORT */
 
-import WorkerFrontend from '~/worker/frontend';
-import type {Message, MessageReady, MessageResult, Methods, Env, Task} from '~/types';
+import WorkerFrontend from './frontend';
+import type {Message, MessageReady, MessageResult, Methods, Env, Task} from '../types';
 
 /* MAIN */
 
