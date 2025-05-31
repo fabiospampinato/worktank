@@ -18,7 +18,7 @@ class WorkTank<T extends Methods> {
   private env: Env;
   private name: string;
   private size: number;
-  private methods: string;
+  private bootloader: string;
   private tasksBusy: Set<Task<T>>;
   private tasksReady: Set<Task<T>>;
   private workersBusy: Set<Worker<T>>;
@@ -34,7 +34,7 @@ class WorkTank<T extends Methods> {
     this.env = { ...globalThis.process?.env, ...options.env };
     this.name = options.name ?? 'WorkTank-Worker';
     this.size = options.size ?? 1;
-    this.methods = this._getMethods ( options.methods );
+    this.bootloader = this._getWorkerBootloader ( this.env, options.methods );
     this.tasksBusy = new Set ();
     this.tasksReady = new Set ();
     this.workersBusy = new Set ();
@@ -48,7 +48,7 @@ class WorkTank<T extends Methods> {
 
   /* HELPERS */
 
-  private _autoterminate (): void {
+  private _autoterminate = (): void => {
 
     if ( this.terminateTimeoutId ) return;
 
@@ -74,15 +74,26 @@ class WorkTank<T extends Methods> {
 
   }
 
-  private _getMethods ( methods: T | URL | string ): string {
+  private _getTaskReady = (): Task<T> | undefined => {
 
-    if ( typeof methods === 'string' ) { // Already serialized methods, or URL to import, useful for complex and/or bundled workers
+    for ( const task of this.tasksReady ) return task;
 
-      if ( /^(file|https?):\/\//.test ( methods ) ) { // URL to import
+  }
 
-        const register = `Object.entries ( Methods ).forEach ( ([ name, fn ]) => typeof fn === 'function' && WorkTankWorkerBackend.register ( name, fn ) );`;
+  private _getWorkerBootloader = ( envs: Env, methods: T | URL | string ): string => {
+
+    if ( methods instanceof URL ) { // URL object to import
+
+      return this._getWorkerBootloader ( envs, methods.href );
+
+    } else if ( typeof methods === 'string' ) { // Already serialized methods, or URL string to import, useful for complex and/or bundled workers
+
+      if ( /^(file|https?):\/\//.test ( methods ) ) { // URL string to import
+
+        const env = `WorkTankWorkerBackend.registerEnv ( ${JSON.stringify ( envs )} );`;
+        const register = `WorkTankWorkerBackend.registerMethods ( Methods );`;
         const ready = 'WorkTankWorkerBackend.ready ();';
-        const load = `${'import'} ( '${methods}' ).then ( Methods => { \n${register}\n\n${ready}\n } );`;
+        const load = `${env}\n\n${'import'} ( '${methods}' ).then ( Methods => { \n${register}\n\n${ready}\n } );`;
 
         return load;
 
@@ -92,17 +103,14 @@ class WorkTank<T extends Methods> {
 
       }
 
-    } else if ( methods instanceof URL ) { // URL to import
-
-      return this._getMethods ( methods.href );
-
     } else { // Serializable methods
 
+      const env = `WorkTankWorkerBackend.registerEnv ( ${JSON.stringify ( envs )} );`;
       const names = Object.keys ( methods );
       const values = Object.values ( methods );
-      const register = names.map ( ( name, index ) => `WorkTankWorkerBackend.register ( '${name}', ${values[index].toString ()} );` ).join ( '\n' );
+      const register = names.map ( ( name, index ) => `WorkTankWorkerBackend.registerMethods ({ ${name}: ${values[index].toString ()} });` ).join ( '\n' );
       const ready = 'WorkTankWorkerBackend.ready ();';
-      const load = `${register}\n\n${ready}`;
+      const load = `${env}\n\n${register}\n\n${ready}`;
 
       return load;
 
@@ -110,13 +118,7 @@ class WorkTank<T extends Methods> {
 
   }
 
-  private _getTaskReady (): Task<T> | undefined {
-
-    for ( const task of this.tasksReady ) return task;
-
-  }
-
-  private _getWorkerName (): string {
+  private _getWorkerName = (): string => {
 
     if ( this.size < 2 ) return this.name;
 
@@ -126,14 +128,14 @@ class WorkTank<T extends Methods> {
 
   }
 
-  private _getWorkerReady (): Worker<T> | undefined {
+  private _getWorkerReady = (): Worker<T> | undefined => {
 
     for ( const worker of this.workersReady ) return worker;
 
     if ( this.workersBusy.size >= this.size ) return;
 
     const name = this._getWorkerName ();
-    const worker = new Worker<T> ( this.env, this.methods, name );
+    const worker = new Worker<T> ( name, this.bootloader );
 
     this.workersReady.add ( worker );
 
@@ -141,12 +143,12 @@ class WorkTank<T extends Methods> {
 
   }
 
-  private _getWorkersWarm (): void {
+  private _getWorkersWarm = (): void => {
 
     for ( let i = 0, l = this.size; i < l; i++ ) {
 
       const name = this._getWorkerName ();
-      const worker = new Worker<T> ( this.env, this.methods, name );
+      const worker = new Worker<T> ( name, this.bootloader );
 
       this.workersReady.add ( worker );
 
@@ -156,7 +158,7 @@ class WorkTank<T extends Methods> {
 
   /* API */
 
-  exec <U extends MethodsNames<T>> ( method: U, args: MethodArguments<T, U> ): Promise<Awaited<MethodReturn<T, U>>> {
+  exec = <U extends MethodsNames<T>> ( method: U, args: MethodArguments<T, U> ): Promise<Awaited<MethodReturn<T, U>>> => {
 
     const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
     const task = { method, args, promise, resolve, reject };
@@ -172,7 +174,7 @@ class WorkTank<T extends Methods> {
 
   }
 
-  info (): Info {
+  info = (): Info => {
 
     return {
       tasks: {
@@ -189,13 +191,11 @@ class WorkTank<T extends Methods> {
 
   }
 
-  proxy (): MethodsProxied<T> {
+  proxy = (): MethodsProxied<T> => {
 
     return new Proxy ( {} as MethodsProxied<T>, {
 
-      get: <U extends MethodsNames<T>> ( _: unknown, method: U | symbol | number ): MethodProxied<MethodFunction<T, U>> | undefined => {
-
-        if ( typeof method !== 'string' ) throw new Error ( 'Unsupported method name' );
+      get: <U extends MethodsNames<T>> ( _: unknown, method: U ): MethodProxied<MethodFunction<T, U>> | undefined => {
 
         if ( method === 'then' ) return; //UGLY: Hacky limitation, because a wrapping Promise will lookup this property
 
@@ -210,7 +210,7 @@ class WorkTank<T extends Methods> {
 
   }
 
-  terminate (): void {
+  terminate = (): void => {
 
     this.terminated = true;
 
@@ -240,7 +240,7 @@ class WorkTank<T extends Methods> {
 
   }
 
-  tick (): void {
+  tick = (): void => {
 
     const worker = this._getWorkerReady ();
 

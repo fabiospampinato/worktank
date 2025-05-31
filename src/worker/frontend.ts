@@ -3,7 +3,7 @@
 
 import WorkerShim from 'webworker-shim';
 import WorkerBackend from './backend_compiled';
-import type {Message, Env} from '../types';
+import type {Message} from '../types';
 
 /* MAIN */
 
@@ -15,11 +15,12 @@ class WorkerFrontend {
 
   /* CONSTRUCTOR */
 
-  constructor ( env: Env, methods: string, name: string, onClose: Function, onMessage: Function ) {
+  constructor ( name: string, bootloader: string, onClose: Function, onMessage: Function ) {
 
-    const code = `data:text/javascript;charset=utf-8,${encodeURIComponent ( WorkerBackend.replace ( 'globalThis.process.ENV_PLACEHOLDER', JSON.stringify ( env ) ).replace ( '/*! METHODS_PLACEHOLDER !*/', `\n\n\n${methods}` ) )}`;
+    const backend = WorkerBackend.replace ( '/*! BOOTLOADER_PLACEHOLDER !*/', bootloader );
+    const script = `data:text/javascript;charset=utf-8,${encodeURIComponent ( backend )}`;
 
-    this.worker = new WorkerShim ( code, { name, type: 'module' } );
+    this.worker = new WorkerShim ( script, { name, type: 'module' } );
 
     this.listen ( onClose, onMessage );
 
@@ -27,20 +28,20 @@ class WorkerFrontend {
 
   /* API */
 
-  listen ( onClose: Function, onMessage: Function ): void {
+  listen = ( onClose: Function, onMessage: Function ): void => {
 
     this.worker.addEventListener ( 'close', event => onClose ( event['data'] ) );
     this.worker.addEventListener ( 'message', event => onMessage ( event['data'] ) );
 
   }
 
-  send ( message: Message ): void {
+  send = ( message: Message ): void => {
 
     this.worker.postMessage ( message );
 
   }
 
-  terminate (): void {
+  terminate = (): void => {
 
     this.worker.terminate ();
 

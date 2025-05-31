@@ -1,79 +1,139 @@
 
 /* IMPORT */
 
-import type {Message} from '../types';
+import once from 'function-once';
+import type {Env, Message, Methods} from '../types';
 
 /* MAIN */
 
-globalThis['WorkTankWorkerBackend'] = new class {
+globalThis.WorkTankWorkerBackend = (() => {
 
   /* VARIABLES */
 
-  private methods: Record<string, Function> = {};
-
-  /* CONSTRUCTOR */
-
-  constructor () {
-
-    addEventListener ( 'message', this.message.bind ( this ) );
-
-  }
+  const {addEventListener, postMessage} = globalThis;
+  const registry: Methods = {};
 
   /* API */
 
-  exec ( method: string, args: any[] ): void {
+  const castError = ( error: unknown ): Error => {
 
-    const fn = this.methods[method];
-    const result = new Promise ( resolve => resolve ( fn.apply ( undefined, args ) ) );
+    if ( error instanceof Error ) return error;
 
-    const onSuccess = ( value: any ): void => {
-      try {
-        postMessage ({ type: 'result', value });
-      } catch ( error ) {
-        onError ( error );
-      }
-    };
+    if ( typeof error === 'string' ) return new Error ( error );
 
-    const onError = ( error: any ): void => {
-      error = ( error instanceof Error ) ? error : ( typeof error === 'string' ? new Error ( error ) : new Error () );
-      const {message, name, stack} = error;
-      postMessage ({ type: 'result', error: {message, name, stack} });
-    };
+    return new Error ( 'Unknown error' );
 
-    result.then ( onSuccess, onError );
+  };
 
-  }
+  const log = ( value: string ): void => {
 
-  message ( message: Event & { data: Message } ): void {
+    try {
 
-    if ( message.data.type === 'exec' ) {
+      postMessage ({ type: 'log', value });
 
-      return this.exec ( message.data.method, message.data.args );
+    } catch ( error ) {
+
+      console.error ( 'Failed to post log message', error );
 
     }
 
-  }
+  };
 
-  ready (): void {
+  const onMessage = ( message: Event & { data?: Message } ): void => {
+
+    if ( message.data?.type === 'exec' ) {
+
+      onMessageExec ( message.data.method, message.data.args );
+
+    } else {
+
+      log ( `Unknown message type: ${message.data?.type}` );
+
+    }
+
+  };
+
+  const onMessageExec = ( method: string, args: unknown[] ): void => {
+
+    const fn = registry[method];
+    const result = new Promise ( resolve => resolve ( fn.apply ( undefined, args ) ) );
+
+    result.then ( onResultSuccess, onResultError );
+
+  };
+
+  const onResultError = ( error: unknown ): void => {
+
+    const {name, message, stack} = castError ( error );
+
+    try {
+
+      postMessage ({ type: 'result', error: { name, message, stack } });
+
+    } catch {
+
+      onResultError ( 'Failed to post error message' );
+
+    }
+
+  };
+
+  const onResultSuccess = ( value: unknown ): void => {
+
+    try {
+
+      postMessage ({ type: 'result', value });
+
+    } catch ( error ) {
+
+      onResultError ( error );
+
+    }
+
+  };
+
+  const ready = once ((): void => {
+
+    addEventListener ( 'message', onMessage );
 
     postMessage ({ type: 'ready' });
 
-  }
+  });
 
-  register ( method: string, fn: Function ): void {
+  const registerEnv = ( env: Env ): void => {
 
-    this.methods[method] = fn;
+    globalThis.process ||= {};
+    globalThis.process.env = {
+      ...globalThis.process.env,
+      ...env
+    };
 
-  }
+  };
 
-}
+  const registerMethods = ( methods: Methods ): void => {
 
-/* PLACEHOLDERS */
+    for ( const name in methods ) {
 
-globalThis.process ||= {};
-globalThis.process.env = {
-  ...globalThis.process.env,
-  ...globalThis.process.ENV_PLACEHOLDER
-};
+      const method = methods[name];
 
-/*! METHODS_PLACEHOLDER !*/
+      if ( typeof method === 'function' ) {
+
+        registry[name] = method;
+
+      } else {
+
+        log ( `Method "${name}" is not a function and will be ignored` );
+
+      }
+
+    }
+
+  };
+
+  /* RETURN */
+
+  return { ready, registerEnv, registerMethods };
+
+})();
+
+/*! BOOTLOADER_PLACEHOLDER !*/

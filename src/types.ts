@@ -11,6 +11,11 @@ type MessageExec = {
   args: any[]
 };
 
+type MessageLog = {
+  type: 'log',
+  value: string
+};
+
 type MessageReady = {
   type: 'ready'
 };
@@ -31,13 +36,13 @@ type MessageResultError = {
 
 type MessageResult = MessageResultSuccess | MessageResultError;
 
-type Message = MessageExec | MessageReady | MessageResult;
+type Message = MessageExec | MessageLog | MessageReady | MessageResult;
 
 /* METHODS */
 
 type Methods = Record<string, FN>;
 
-type MethodsNames<T extends Methods> = keyof T;
+type MethodsNames<T extends Methods> = keyof T extends string ? keyof T : never;
 
 type MethodsFunctions<T extends Methods> = T[keyof T];
 
@@ -91,6 +96,6 @@ type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
 /* EXPORT */
 
 export type {FN};
-export type {MessageExec, MessageReady, MessageResult, Message};
+export type {MessageExec, MessageLog, MessageReady, MessageResult, Message};
 export type {Methods, MethodsNames, MethodsFunctions, MethodsProxied, MethodFunction, MethodArguments, MethodReturn, MethodProxied};
 export type {Env, Info, Options, Task};

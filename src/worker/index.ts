@@ -2,7 +2,7 @@
 /* IMPORT */
 
 import WorkerFrontend from './frontend';
-import type {Message, MessageReady, MessageResult, Methods, Env, Task} from '../types';
+import type {Message, MessageLog, MessageReady, MessageResult, Methods, Task} from '../types';
 
 /* MAIN */
 
@@ -11,25 +11,24 @@ class Worker<T extends Methods> {
   /* VARIABLES */
 
   public busy: boolean;
-  public loaded: boolean;
+  public ready: boolean;
   public terminated: boolean;
 
-  private env: Env;
   private name: string;
-  private methods: string;
+  private bootloader: string;
   private task?: Task<T>;
   private worker: WorkerFrontend;
 
   /* CONSTRUCTOR */
 
-  constructor ( env: Env, methods: string, name: string ) {
+  constructor ( name: string, bootloader: string ) {
 
     this.busy = false;
-    this.loaded = false;
+    this.ready = false;
     this.terminated = false;
-    this.env = env;
+
     this.name = name;
-    this.methods = methods;
+    this.bootloader = bootloader;
     this.worker = this._getWorker ();
 
   }
@@ -38,19 +37,19 @@ class Worker<T extends Methods> {
 
   private _getWorker (): WorkerFrontend {
 
-    return new WorkerFrontend ( this.env, this.methods, this.name, this.onClose.bind ( this ), this.onMessage.bind ( this ) );
+    return new WorkerFrontend ( this.name, this.bootloader, this.onClose, this.onMessage );
 
   }
 
   /* EVENTS API */
 
-  onClose ( code: number ): void {
+  private onClose = ( code: number ): void => {
 
     if ( this.terminated ) return;
 
     this.worker.terminate ();
     this.worker = this._getWorker ();
-    this.loaded = false;
+    this.ready = false;
 
     const {task} = this;
 
@@ -61,29 +60,45 @@ class Worker<T extends Methods> {
 
       const error = new Error ( `WorkTank Worker (${this.name}): closed unexpectedly with exit code ${code}` );
 
-      return task.reject ( error );
+      task.reject ( error );
 
     }
 
   }
 
-  onMessage ( message: Message ): void {
+  private onMessage = ( message: Message ): void => {
 
-    if ( message.type === 'ready' ) return this.onMessageReady ( message );
+    if ( message.type === 'log' ) {
 
-    if ( message.type === 'result' ) return this.onMessageResult ( message );
+      this.onMessageLog ( message );
+
+    } else if ( message.type === 'ready' ) {
+
+      this.onMessageReady ( message );
+
+    } else if ( message.type === 'result' ) {
+
+      this.onMessageResult ( message );
+
+    }
 
   }
 
-  onMessageReady ( message: MessageReady ): void {
+  private onMessageLog = ( message: MessageLog ): void => {
 
-    this.loaded = true;
+    console.log ( message.value );
+
+  }
+
+  private onMessageReady = ( message: MessageReady ): void => {
+
+    this.ready = true;
 
     this.tick ();
 
   }
 
-  onMessageResult ( message: MessageResult ): void {
+  private onMessageResult = ( message: MessageResult ): void => {
 
     const {task} = this;
 
@@ -94,13 +109,13 @@ class Worker<T extends Methods> {
 
     if ( 'value' in message ) { // Success
 
-      return task.resolve ( message.value );
+      task.resolve ( message.value );
 
     } else { // Error
 
       const error = Object.assign ( new Error (), message.error );
 
-      return task.reject ( error );
+      task.reject ( error );
 
     }
 
@@ -108,7 +123,7 @@ class Worker<T extends Methods> {
 
   /* API */
 
-  exec ( task: Task<T> ): void {
+  exec = ( task: Task<T> ): void => {
 
     if ( this.terminated || this.task || this.busy ) throw new Error ( `WorkTank Worker (${this.name}): already busy or terminated` );
 
@@ -118,7 +133,9 @@ class Worker<T extends Methods> {
 
   }
 
-  terminate (): void {
+  terminate = (): void => {
+
+    if ( this.terminated ) return;
 
     this.terminated = true;
 
@@ -134,13 +151,11 @@ class Worker<T extends Methods> {
 
   }
 
-  tick (): void {
+  tick = (): void => {
 
-    if ( this.terminated || !this.loaded || !this.task || this.busy ) return;
+    if ( this.terminated || !this.ready || !this.task || this.busy ) return;
 
     const {method, args} = this.task;
-
-    if ( typeof method !== 'string' ) throw new Error ( 'Unsupported method name' );
 
     this.busy = true;
 
