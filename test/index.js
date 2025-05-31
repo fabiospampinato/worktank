@@ -158,6 +158,21 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'supports pre-instantiating workers', async t => {
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS,
+      size: 3,
+      warmup: true
+    });
+
+    t.like ( pool.info ().workers, { busy: 0, ready: 3 } );
+
+    pool.terminate ();
+
+  });
+
   it ( 'supports passing custom environment variables to workers', async t => {
 
     const pool = new WorkTank ({
