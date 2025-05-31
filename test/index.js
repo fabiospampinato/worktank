@@ -7,13 +7,26 @@ import {pathToFileURL} from 'node:url';
 import WorkTank from '../dist/index.js';
 import * as METHODS from './worker.js';
 
+/* HELPERS */
+
+const waitIdle = pool => {
+  return new Promise ( resolve => {
+    const intervalId = setInterval ( () => {
+      if ( pool.info ().workers.busy === 0 ) {
+        clearInterval ( intervalId );
+        resolve ();
+      }
+    }, 5 );
+  });
+};
+
 /* MAIN */
 
 //TODO: Add more tests
 
 describe ( 'WorkTank', it => {
 
-  it ( 'can execute serializable methods', async t => {
+  it ( 'supports executing serializable methods', async t => {
 
     t.plan ( 4 );
 
@@ -45,7 +58,7 @@ describe ( 'WorkTank', it => {
 
   });
 
-  it ( 'can execute imported methods', async t => {
+  it ( 'supports executing imported methods', async t => {
 
     t.plan ( 4 );
 
@@ -77,7 +90,7 @@ describe ( 'WorkTank', it => {
 
   });
 
-  it ( 'can execute methods via a proxy object', async t => {
+  it ( 'supports executing methods via a proxy object', async t => {
 
     t.plan ( 4 );
 
@@ -111,7 +124,41 @@ describe ( 'WorkTank', it => {
 
   });
 
-  it ( 'can pass custom environment variables to workers', async t => {
+  it ( 'supports instantiating workers when necessary', async t => {
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS,
+      size: 3
+    });
+
+    t.like ( pool.info ().workers, { busy: 0, ready: 0 } );
+
+    await pool.exec ( 'ping' );
+
+    t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+
+    await pool.exec ( 'ping' );
+
+    t.like ( pool.info ().workers, { busy: 0, ready: 1 } );
+
+    pool.exec ( 'ping' );
+    pool.exec ( 'ping' );
+    pool.exec ( 'ping' );
+    pool.exec ( 'ping' );
+    pool.exec ( 'ping' );
+
+    t.like ( pool.info ().workers, { busy: 3, ready: 0 } );
+
+    await waitIdle ( pool );
+
+    t.like ( pool.info ().workers, { busy: 0, ready: 3 } );
+
+    pool.terminate ();
+
+  });
+
+  it ( 'supports passing custom environment variables to workers', async t => {
 
     const pool = new WorkTank ({
       name: 'example',
@@ -133,7 +180,7 @@ describe ( 'WorkTank', it => {
 
   });
 
-  it ( 'can handle and recover from a worker existing unexpectedly', async t => {
+  it ( 'supports handling and recovering from a worker existing unexpectedly', async t => {
 
     t.plan ( 3 );
 

@@ -177,11 +177,13 @@ class WorkTank<T extends Methods> {
     return {
       tasks: {
         busy: this.tasksBusy.size,
-        ready: this.tasksReady.size
+        ready: this.tasksReady.size,
+        total: this.tasksBusy.size + this.tasksReady.size
       },
       workers: {
         busy: this.workersBusy.size,
-        ready: this.workersReady.size
+        ready: this.workersReady.size,
+        total: this.workersBusy.size + this.workersReady.size
       }
     };
 

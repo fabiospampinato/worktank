@@ -9,6 +9,10 @@ const exit = code => {
   process.exit ( code );
 };
 
+const ping = () => {
+  return 'pong';
+};
+
 const sep = async () => {
   const {sep} = await import ( 'node:path' );
   return sep;
@@ -20,4 +24,4 @@ const sum = ( a, b ) => {
 
 /* EXPORT */
 
-export {exit, exception, sep, sum};
+export {exit, exception, ping, sep, sum};

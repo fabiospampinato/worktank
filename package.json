@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "esbuild": "^0.25.5",
-    "fava": "^0.3.4",
+    "fava": "^0.3.5",
     "tsex": "^4.0.2",
     "typescript": "^5.8.3"
   }

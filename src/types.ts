@@ -60,11 +60,13 @@ type Env = Partial<{
 type Info = {
   tasks: {
     busy: number,
-    ready: number
+    ready: number,
+    total: number
   },
   workers: {
     busy: number,
-    ready: number
+    ready: number,
+    total: number
   }
 };
 
