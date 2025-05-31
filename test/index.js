@@ -256,7 +256,7 @@ describe ( 'WorkTank', it => {
 
   });
 
-  it ( 'supports exec-level abort signals', async t => {
+  it ( 'supports exec-level abort signals, abortable', async t => {
 
     t.plan ( 3 );
 
@@ -277,6 +277,37 @@ describe ( 'WorkTank', it => {
       controller.abort ();
 
       await result;
+
+    } catch ( error ) {
+
+      t.true ( error instanceof WorkerError );
+      t.is ( error.message, 'Terminated' );
+
+      t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
+
+    }
+
+    pool.terminate ();
+
+  });
+
+  it ( 'supports exec-level abort signals, aborted', async t => {
+
+    t.plan ( 3 );
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS
+    });
+
+    try {
+
+      const controller = new AbortController ();
+      const {signal} = controller;
+
+      controller.abort ();
+
+      await pool.exec ( 'sleep', [1000], { signal } );
 
     } catch ( error ) {
 

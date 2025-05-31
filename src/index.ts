@@ -263,15 +263,31 @@ class WorkTank<T extends Methods> {
 
   tick = (): void => {
 
-    /* GETTING TASK & WORKER */
+    /* GETTING TASK */
 
     const task = this.getTaskIdle ();
 
     if ( !task ) return;
 
+    /* SIGNAL - ABORTED */
+
+    if ( task.signal?.aborted ) {
+
+      this.tasksIdle.delete ( task );
+
+      task.reject ( new WorkerError ( this.name, 'Terminated' ) );
+
+      return this.tick ();
+
+    }
+
+    /* GETTING WORKER */
+
     const worker = this.getWorkerIdle ();
 
     if ( !worker ) return;
+
+    /* SETTING UP TASK & WORKER */
 
     this.tasksIdle.delete ( task );
     this.tasksBusy.add ( task );
@@ -279,7 +295,7 @@ class WorkTank<T extends Methods> {
     this.workersIdle.delete ( worker );
     this.workersBusy.add ( worker );
 
-    /* SIGNAL */
+    /* SIGNAL - ABORTABLE */
 
     if ( task.signal ) {
 
