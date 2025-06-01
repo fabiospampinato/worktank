@@ -3,7 +3,7 @@
   "repository": "github:fabiospampinato/worktank",
   "description": "A simple isomorphic library for executing functions inside WebWorkers or Node Threads pools.",
   "license": "MIT",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "type": "module",
   "main": "dist/index.js",
   "exports": "./dist/index.js",
