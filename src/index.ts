@@ -186,8 +186,6 @@ class WorkTank<T extends Methods> {
 
   }
 
-  //TODO: Options: timeout, abortSignal, transferList
-
   exec = <U extends MethodsNames<T>> ( method: U, args: MethodArguments<T, U>, options?: ExecOptions ): Promise<Awaited<MethodReturn<T, U>>> => {
 
     const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
@@ -347,4 +345,4 @@ class WorkTank<T extends Methods> {
 
 export default WorkTank;
 export {WorkerError};
-export type {ExecOptions, Options};
+export type {ExecOptions, Options, Stats};
