@@ -469,4 +469,46 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'supports handling the pool getting terminated while executing', async t => {
+
+    t.plan ( 6 );
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS
+    });
+
+    const result1 = pool.exec ( 'sleep', [1000] );
+    const result2 = pool.exec ( 'sleep', [1000] );
+
+    pool.terminate ();
+
+    try {
+
+      await result1;
+
+    } catch ( error ) {
+
+      t.true ( error instanceof WorkerError );
+      t.is ( error.message, 'Terminated' );
+
+      t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
+
+    }
+
+    try {
+
+      await result2;
+
+    } catch ( error ) {
+
+      t.true ( error instanceof WorkerError );
+      t.is ( error.message, 'Terminated' );
+
+      t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
+
+    }
+
+  });
+
 });
