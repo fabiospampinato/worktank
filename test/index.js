@@ -23,8 +23,6 @@ const waitIdle = pool => {
 
 /* MAIN */
 
-//TODO: Add more tests
-
 describe ( 'WorkTank', it => {
 
   it ( 'supports executing serializable methods', async t => {
@@ -341,6 +339,39 @@ describe ( 'WorkTank', it => {
       t.is ( error.message, 'Terminated' );
 
       t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
+
+    }
+
+    pool.terminate ();
+
+  });
+
+  it ( 'supports exec-level transfer objects', async t => {
+
+    t.plan ( 2 );
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS
+    });
+
+    const buffer = new ArrayBuffer ();
+    const transfer = [buffer];
+
+    await pool.exec ( 'identity', [buffer],  );
+
+    buffer.slice ();
+
+    await pool.exec ( 'identity', [buffer], { transfer } );
+
+    try {
+
+      buffer.slice ();
+
+    } catch ( error ) {
+
+      t.true ( error instanceof Error );
+      t.is ( error.message, 'Cannot perform ArrayBuffer.prototype.slice on a detached ArrayBuffer' );
 
     }
 

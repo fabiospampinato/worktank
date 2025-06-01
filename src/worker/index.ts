@@ -162,9 +162,9 @@ class Worker<T extends Methods> {
 
     try {
 
-      const {method, args} = this.task;
+      const {method, args, transfer} = this.task;
 
-      this.worker.send ({ type: 'exec', method, args });
+      this.worker.send ( { type: 'exec', method, args }, transfer );
 
     } catch {
 

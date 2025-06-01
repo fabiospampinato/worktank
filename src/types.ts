@@ -64,7 +64,8 @@ type Env = Partial<{
 
 type ExecOptions = {
   signal?: AbortSignal,
-  timeout?: number
+  timeout?: number,
+  transfer?: Transferable[]
 };
 
 type Options<T extends Methods> = {
@@ -95,6 +96,7 @@ type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
   args: MethodArguments<T, U>,
   signal?: AbortSignal,
   timeout: number,
+  transfer?: Transferable[],
   promise: Promise<Awaited<MethodReturn<T, U>>>,
   resolve: ( result: MethodReturn<T, U> ) => void,
   reject: ( error: Error ) => void

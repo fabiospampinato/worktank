@@ -193,7 +193,8 @@ class WorkTank<T extends Methods> {
     const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
     const signal = options?.signal;
     const timeout = options?.timeout ?? this.timeout;
-    const task = { method, args, signal, timeout, promise, resolve, reject };
+    const transfer = options?.transfer;
+    const task = { method, args, signal, timeout, transfer, promise, resolve, reject };
 
     this.tasksIdle.add ( task );
 

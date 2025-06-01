@@ -35,9 +35,9 @@ class WorkerFrontend {
 
   }
 
-  send = ( message: Message ): void => {
+  send = ( message: Message, transfer: Transferable[] = [] ): void => {
 
-    this.worker.postMessage ( message );
+    this.worker.postMessage ( message, transfer );
 
   }
 

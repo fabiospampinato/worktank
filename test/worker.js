@@ -9,6 +9,10 @@ const exit = code => {
   process.exit ( code );
 };
 
+const identity = value => {
+  return value;
+};
+
 const ping = () => {
   return 'pong';
 };
@@ -34,4 +38,4 @@ const unserializable = () => {
 
 /* EXPORT */
 
-export {exit, exception, ping, sep, sleep, sum, unserializable};
+export {exit, exception, identity, ping, sep, sleep, sum, unserializable};
