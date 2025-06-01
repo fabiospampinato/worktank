@@ -32,7 +32,7 @@ class Worker<T extends Methods> {
 
     this.name = name;
     this.bootloader = bootloader;
-    this.worker = new WorkerFrontend ( this.name, this.bootloader, this.onClose, this.onMessage );
+    this.worker = new WorkerFrontend ( this.name, this.bootloader, this.onClose, this.onError, this.onMessage );
 
   }
 
@@ -47,6 +47,18 @@ class Worker<T extends Methods> {
     this.worker.terminate ();
 
     this.reject ( new WorkerError ( this.name, `Exited with exit code ${code}` ) );
+
+  }
+
+  private onError = ( error: Error ): void => {
+
+    if ( this.terminated ) return;
+
+    this.terminated = true;
+
+    this.worker.terminate ();
+
+    this.reject ( error );
 
   }
 

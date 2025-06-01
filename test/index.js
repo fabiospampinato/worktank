@@ -628,4 +628,27 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'supports catching syntax errors on instantiation', async t => {
+
+    const pool = new WorkTank ({
+      worker: {
+        methods: '{'
+      }
+    });
+
+    try {
+
+      await pool.exec ( 'ping' );
+
+    } catch ( error ) {
+
+      t.true ( error instanceof Error );
+      t.is ( error.message, 'Unexpected end of input' );
+
+    }
+
+    pool.terminate ();
+
+  });
+
 });
