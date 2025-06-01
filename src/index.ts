@@ -21,6 +21,7 @@ class WorkTank<T extends Methods> {
   private size: number;
   private env: Env;
   private bootloader: string;
+  private warmup: boolean;
 
   private autoterminateTimeout: number;
   private execTimeout: number;
@@ -38,6 +39,7 @@ class WorkTank<T extends Methods> {
     this.size = options.size ?? 1;
     this.env = { ...globalThis.process?.env, ...options.env };
     this.bootloader = this.getWorkerBootloader ( this.env, options.methods );
+    this.warmup = options.warmup ?? false;
 
     this.execTimeout = options.timeout ?? Infinity;
     this.autoterminateTimeout = options.autoterminate ?? 60_000;
@@ -47,11 +49,7 @@ class WorkTank<T extends Methods> {
     this.workersBusy = new Set ();
     this.workersIdle = new Set ();
 
-    if ( options.warmup ) {
-
-      this.getWorkersWarm ();
-
-    }
+    this.resize ( this.size );
 
     if ( this.autoterminateTimeout ) {
 
@@ -154,18 +152,6 @@ class WorkTank<T extends Methods> {
 
   }
 
-  private getWorkersWarm = (): void => {
-
-    const missingNr = this.size - this.workersBusy.size - this.workersIdle.size;
-
-    for ( let i = 0, l = missingNr; i < l; i++ ) {
-
-      this.getWorkerIdleNew ();
-
-    }
-
-  }
-
   /* API */
 
   cleanup = (): void => {
@@ -220,6 +206,44 @@ class WorkTank<T extends Methods> {
 
       }
     });
+
+  }
+
+  resize = ( size: number ): void => {
+
+    this.size = size;
+
+    /* TO INSTANTIATE */
+
+    if ( this.warmup ) {
+
+      const missingNr = Math.max ( 0, this.size - this.workersBusy.size - this.workersIdle.size );
+
+      for ( let i = 0, l = missingNr; i < l; i++ ) {
+
+        this.getWorkerIdleNew ();
+
+      }
+
+    }
+
+    /* TO TERMINATE */
+
+    const excessNr = Math.max ( 0, this.workersIdle.size - this.size );
+
+    for ( let i = 0, l = excessNr; i < l; i++ ) {
+
+      for ( const worker of this.workersIdle ) {
+
+        this.workersIdle.delete ( worker );
+
+        worker.terminate ();
+
+        break;
+
+      }
+
+    }
 
   }
 
