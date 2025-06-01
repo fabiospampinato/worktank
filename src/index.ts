@@ -245,6 +245,10 @@ class WorkTank<T extends Methods> {
 
     }
 
+    /* WORK LOOP */
+
+    this.tick ();
+
   }
 
   stats = (): Stats => {
@@ -362,6 +366,10 @@ class WorkTank<T extends Methods> {
     /* EXECUTING */
 
     worker.exec ( task );
+
+    /* WORK LOOP */
+
+    this.tick ();
 
   }
 

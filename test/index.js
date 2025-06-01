@@ -195,6 +195,36 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'supports resizing, with pending tasks', async t => {
+
+    const pool = new WorkTank ({
+      name: 'example',
+      methods: METHODS,
+      size: 3,
+    });
+
+    t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
+
+    pool.exec ( 'ping' );
+    pool.exec ( 'ping' );
+    pool.exec ( 'ping' );
+    pool.exec ( 'ping' );
+    pool.exec ( 'ping' );
+
+    t.like ( pool.stats ().workers, { busy: 3, idle: 0 } );
+
+    pool.resize ( 5 );
+
+    t.like ( pool.stats ().workers, { busy: 5, idle: 0 } );
+
+    await waitIdle ( pool );
+
+    t.like ( pool.stats ().workers, { busy: 0, idle: 5 } );
+
+    pool.terminate ();
+
+  });
+
   it ( 'supports passing custom environment variables to workers', async t => {
 
     const pool = new WorkTank ({
