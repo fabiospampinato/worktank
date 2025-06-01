@@ -1,6 +1,7 @@
 
 /* IMPORT */
 
+import concurrency from 'isoconcurrency';
 import {setInterval, clearInterval, unrefInterval} from 'isotimer';
 import makeNakedPromise from 'promise-make-naked';
 import Worker from './worker';
@@ -36,7 +37,7 @@ class WorkTank<T extends Methods> {
   constructor ( options: Options<T> ) {
 
     this.name = options.name ?? 'WorkTank-Worker';
-    this.size = options.size ?? 1;
+    this.size = options.size ?? concurrency;
     this.env = { ...globalThis.process?.env, ...options.env };
     this.bootloader = this.getWorkerBootloader ( this.env, options.methods );
     this.warmup = options.warmup ?? false;

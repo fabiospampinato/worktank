@@ -30,6 +30,7 @@
   ],
   "dependencies": {
     "function-once": "^3.0.1",
+    "isoconcurrency": "^1.0.0",
     "isotimer": "^1.0.0",
     "promise-make-naked": "^3.0.2",
     "webworker-shim": "^1.1.3"
