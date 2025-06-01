@@ -353,7 +353,15 @@ class WorkTank<T extends Methods> {
 
       if ( !worker.terminated ) {
 
-        this.workersIdle.add ( worker );
+        if ( this.workersIdle.size < this.size ) { // Still needed
+
+          this.workersIdle.add ( worker );
+
+        } else { // No longer needed
+
+          worker.terminate ();
+
+        }
 
       }
 
