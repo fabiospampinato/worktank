@@ -69,13 +69,17 @@ type ExecOptions = {
 };
 
 type Options<T extends Methods> = {
-  env?: Env,
-  name?: string,
-  size?: number,
-  timeout?: number,
-  warmup?: boolean,
-  autoterminate?: number,
-  methods: T | URL | string
+  pool?: {
+    name?: string,
+    size?: number,
+  },
+  worker: {
+    autoAbort?: number,
+    autoInstantiate?: boolean,
+    autoTerminate?: number,
+    env?: Env,
+    methods: T | URL | string
+  }
 };
 
 type Stats = {

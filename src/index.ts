@@ -20,12 +20,13 @@ class WorkTank<T extends Methods> {
 
   private name: string;
   private size: number;
+
   private env: Env;
   private bootloader: string;
-  private warmup: boolean;
 
-  private autoterminateTimeout: number;
-  private execTimeout: number;
+  private autoAbort: number;
+  private autoInstantiate: boolean;
+  private autoTerminate: number;
 
   private tasksBusy: Set<Task<T>>;
   private tasksIdle: Set<Task<T>>;
@@ -36,14 +37,15 @@ class WorkTank<T extends Methods> {
 
   constructor ( options: Options<T> ) {
 
-    this.name = options.name ?? 'WorkTank-Worker';
-    this.size = options.size ?? concurrency;
-    this.env = { ...globalThis.process?.env, ...options.env };
-    this.bootloader = this.getWorkerBootloader ( this.env, options.methods );
-    this.warmup = options.warmup ?? false;
+    this.name = options.pool?.name ?? 'WorkTank';
+    this.size = options.pool?.size ?? concurrency;
 
-    this.execTimeout = options.timeout ?? Infinity;
-    this.autoterminateTimeout = options.autoterminate ?? 60_000;
+    this.env = { ...globalThis.process?.env, ...options.worker.env };
+    this.bootloader = this.getWorkerBootloader ( this.env, options.worker.methods );
+
+    this.autoAbort = options.worker.autoAbort ?? 0;
+    this.autoInstantiate = options.worker.autoInstantiate ?? false;
+    this.autoTerminate = options.worker.autoTerminate ?? 0;
 
     this.tasksBusy = new Set ();
     this.tasksIdle = new Set ();
@@ -52,12 +54,12 @@ class WorkTank<T extends Methods> {
 
     this.resize ( this.size );
 
-    if ( this.autoterminateTimeout ) {
+    if ( this.autoTerminate ) {
 
       const thizRef = new WeakRef ( this );
       const intervalId = setInterval ( () => {
         thizRef.deref ()?.cleanup ();
-      }, this.autoterminateTimeout );
+      }, this.autoTerminate );
 
       unrefInterval ( intervalId );
 
@@ -157,9 +159,9 @@ class WorkTank<T extends Methods> {
 
   cleanup = (): void => {
 
-    if ( this.autoterminateTimeout <= 0 ) return;
+    if ( this.autoTerminate <= 0 ) return;
 
-    const autoterminateTimestamp = Date.now () - this.autoterminateTimeout;
+    const autoterminateTimestamp = Date.now () - this.autoTerminate;
 
     for ( const worker of this.workersIdle ) {
 
@@ -179,7 +181,7 @@ class WorkTank<T extends Methods> {
 
     const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
     const signal = options?.signal;
-    const timeout = options?.timeout ?? this.execTimeout;
+    const timeout = options?.timeout ?? this.autoAbort;
     const transfer = options?.transfer;
     const task = { method, args, signal, timeout, transfer, promise, resolve, reject };
 
@@ -216,7 +218,7 @@ class WorkTank<T extends Methods> {
 
     /* TO INSTANTIATE */
 
-    if ( this.warmup ) {
+    if ( this.autoInstantiate ) {
 
       const missingNr = Math.max ( 0, this.size - this.workersBusy.size - this.workersIdle.size );
 

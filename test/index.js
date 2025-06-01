@@ -30,8 +30,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 4 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS
+      worker: {
+        methods: METHODS
+      }
     });
 
     const sumResult = await pool.exec ( 'sum', [10, 20] );
@@ -62,8 +63,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 4 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: pathToFileURL ( path.resolve ( './test/worker.js' ) )
+      worker: {
+        methods: pathToFileURL ( path.resolve ( './test/worker.js' ) )
+      }
     });
 
     const sumResult = await pool.exec ( 'sum', [10, 20] );
@@ -94,8 +96,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 4 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS,
+      worker: {
+        methods: METHODS,
+      }
     });
 
     const proxy = pool.proxy ();
@@ -126,9 +129,12 @@ describe ( 'WorkTank', it => {
   it ( 'supports instantiating workers when necessary', async t => {
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS,
-      size: 3
+      pool: {
+        size: 3,
+      },
+      worker: {
+        methods: METHODS
+      }
     });
 
     t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
@@ -160,10 +166,13 @@ describe ( 'WorkTank', it => {
   it ( 'supports pre-instantiating workers', async t => {
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS,
-      size: 3,
-      warmup: true
+      pool: {
+        size: 3
+      },
+      worker: {
+        autoInstantiate: true,
+        methods: METHODS,
+      }
     });
 
     t.like ( pool.stats ().workers, { busy: 0, idle: 3 } );
@@ -175,10 +184,13 @@ describe ( 'WorkTank', it => {
   it ( 'supports resizing, with pre-instantiation', async t => {
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS,
-      size: 3,
-      warmup: true
+      pool: {
+        size: 3
+      },
+      worker: {
+        autoInstantiate: true,
+        methods: METHODS,
+      }
     });
 
     t.like ( pool.stats ().workers, { busy: 0, idle: 3 } );
@@ -198,9 +210,12 @@ describe ( 'WorkTank', it => {
   it ( 'supports resizing, with pending tasks', async t => {
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS,
-      size: 3,
+      pool: {
+        size: 3
+      },
+      worker: {
+        methods: METHODS,
+      }
     });
 
     t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
@@ -228,9 +243,12 @@ describe ( 'WorkTank', it => {
   it ( 'supports resizing, with busy tasks', async t => {
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS,
-      size: 3,
+      pool: {
+        size: 3
+      },
+      worker: {
+        methods: METHODS,
+      }
     });
 
     t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
@@ -258,13 +276,14 @@ describe ( 'WorkTank', it => {
   it ( 'supports passing custom environment variables to workers', async t => {
 
     const pool = new WorkTank ({
-      name: 'example',
-      env: {
-        CUSTOM_ENV: '123'
-      },
-      methods: {
-        getEnv: () => {
-          return globalThis.process.env.CUSTOM_ENV;
+      worker: {
+        env: {
+          CUSTOM_ENV: '123'
+        },
+        methods: {
+          getEnv: () => {
+            return globalThis.process.env.CUSTOM_ENV;
+          }
         }
       }
     });
@@ -280,10 +299,13 @@ describe ( 'WorkTank', it => {
   it ( 'supports terminating workers automatically for inactivity', async t => {
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS,
-      size: 3,
-      autoterminate: 100
+      pool: {
+        size: 3
+      },
+      worker: {
+        autoTerminate: 100,
+        methods: METHODS,
+      }
     });
 
     t.like ( pool.stats ().workers, { busy: 0, idle: 0 } );
@@ -311,9 +333,13 @@ describe ( 'WorkTank', it => {
     t.plan ( 4 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS,
-      timeout: 100
+      pool: {
+        size: 3
+      },
+      worker: {
+        autoAbort: 100,
+        methods: METHODS,
+      }
     });
 
     try {
@@ -342,8 +368,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 3 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS
+      worker: {
+        methods: METHODS
+      }
     });
 
     try {
@@ -377,8 +404,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 3 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS
+      worker: {
+        methods: METHODS
+      }
     });
 
     try {
@@ -408,8 +436,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 3 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS
+      worker: {
+        methods: METHODS
+      }
     });
 
     try {
@@ -434,8 +463,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 2 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS
+      worker: {
+        methods: METHODS
+      }
     });
 
     const buffer = new ArrayBuffer ();
@@ -467,8 +497,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 4 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: pathToFileURL ( path.resolve ( './test/worker.js' ) )
+      worker: {
+        methods: pathToFileURL ( path.resolve ( './test/worker.js' ) )
+      }
     });
 
     try {
@@ -497,8 +528,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 4 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS
+      worker: {
+        methods: METHODS
+      }
     });
 
     try {
@@ -527,8 +559,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 4 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS
+      worker: {
+        methods: METHODS
+      }
     });
 
     try {
@@ -557,8 +590,9 @@ describe ( 'WorkTank', it => {
     t.plan ( 6 );
 
     const pool = new WorkTank ({
-      name: 'example',
-      methods: METHODS
+      worker: {
+        methods: METHODS
+      }
     });
 
     const result1 = pool.exec ( 'sleep', [1000] );
