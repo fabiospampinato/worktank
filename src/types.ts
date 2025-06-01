@@ -104,7 +104,6 @@ type Task<T extends Methods, U extends MethodsNames<T> = MethodsNames<T>> = {
 
 /* EXPORT */
 
-export type {FN};
 export type {MessageExec, MessageLog, MessageReady, MessageResult, Message};
 export type {Methods, MethodsNames, MethodsFunctions, MethodsProxied, MethodFunction, MethodArguments, MethodReturn, MethodProxied};
 export type {Env, ExecOptions, Options, Stats, Task};

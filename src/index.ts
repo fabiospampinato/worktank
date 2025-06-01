@@ -22,8 +22,8 @@ class WorkTank<T extends Methods> {
   private env: Env;
   private bootloader: string;
 
-  private timeout: number;
   private autoterminateTimeout: number;
+  private execTimeout: number;
 
   private tasksBusy: Set<Task<T>>;
   private tasksIdle: Set<Task<T>>;
@@ -39,7 +39,7 @@ class WorkTank<T extends Methods> {
     this.env = { ...globalThis.process?.env, ...options.env };
     this.bootloader = this.getWorkerBootloader ( this.env, options.methods );
 
-    this.timeout = options.timeout ?? Infinity;
+    this.execTimeout = options.timeout ?? Infinity;
     this.autoterminateTimeout = options.autoterminate ?? 60_000;
 
     this.tasksBusy = new Set ();
@@ -48,7 +48,9 @@ class WorkTank<T extends Methods> {
     this.workersIdle = new Set ();
 
     if ( options.warmup ) {
+
       this.getWorkersWarm ();
+
     }
 
     if ( this.autoterminateTimeout ) {
@@ -190,7 +192,7 @@ class WorkTank<T extends Methods> {
 
     const {promise, resolve, reject} = makeNakedPromise<Awaited<MethodReturn<T, U>>> ();
     const signal = options?.signal;
-    const timeout = options?.timeout ?? this.timeout;
+    const timeout = options?.timeout ?? this.execTimeout;
     const transfer = options?.transfer;
     const task = { method, args, signal, timeout, transfer, promise, resolve, reject };
 

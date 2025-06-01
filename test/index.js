@@ -379,7 +379,7 @@ describe ( 'WorkTank', it => {
 
   });
 
-  it ( 'supports handling and recovering from a worker existing unexpectedly', async t => {
+  it ( 'supports handling and recovering from a worker exiting unexpectedly', async t => {
 
     t.plan ( 4 );
 
