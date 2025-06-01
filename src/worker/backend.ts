@@ -1,7 +1,6 @@
 
 /* IMPORT */
 
-import once from 'function-once';
 import type {Env, Message, Methods} from '../types';
 
 /* MAIN */
@@ -36,6 +35,26 @@ globalThis.WorkTankWorkerBackend = (() => {
       console.error ( 'Failed to post log message', error );
 
     }
+
+  };
+
+  const once = <T> ( fn: (() => T) ): (() => T) => {
+
+    let called = false;
+    let result: T;
+
+    return (): T => {
+
+      if ( !called ) {
+
+        called = true;
+        result = fn ();
+
+      }
+
+      return result;
+
+    };
 
   };
 
