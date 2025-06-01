@@ -120,10 +120,6 @@ const pool = new WorkTank ({
 
 Transparent pools are similar to what you get by calling `.proxy()` on a pool instance, but they bump the convenience up a notch.
 
-Essentially by just importing a `*.worker.js` module it will look to you and to TypeScript as if you are just importing async functions, but actually a pool will be created for that module automatically for you, the pool will be proxied, and what you will be actually calling would be those proxied methods.
-
-It's important to annotate the returned function as actually being async or otherwise returning a promise, otherwise the expected types and the actual types will not match.
-
 This functionality requires a bundler plugin to work, check out the supported plugins below:
 
 - **Esbuild**: [worktank-esbuild-plugin](https://github.com/fabiospampinato/worktank-esbuild-plugin), the official plugin for Esbuild.
