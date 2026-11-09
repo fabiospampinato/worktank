@@ -296,6 +296,26 @@ describe ( 'WorkTank', it => {
 
   });
 
+  it ( 'supports methods containing special replacement patterns', async t => {
+
+    const pool = new WorkTank ({
+      worker: {
+        methods: {
+          patterns: () => {
+            return '$& $` $\' $$';
+          }
+        }
+      }
+    });
+
+    const value = await pool.exec ( 'patterns' );
+
+    t.is ( value, '$& $` $\' $$' );
+
+    pool.terminate ();
+
+  });
+
   it ( 'supports terminating workers automatically for inactivity', async t => {
 
     const pool = new WorkTank ({
