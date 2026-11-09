@@ -17,7 +17,7 @@ class WorkerFrontend {
 
   constructor ( name: string, bootloader: string, onClose: Function, onError: Function, onMessage: Function ) {
 
-    const backend = WorkerBackend.replace ( '/*! BOOTLOADER_PLACEHOLDER !*/', bootloader );
+    const backend = WorkerBackend.replace ( '/*! BOOTLOADER_PLACEHOLDER !*/', () => bootloader );
     const script = `data:text/javascript;charset=utf-8,${encodeURIComponent ( backend )}`;
 
     this.worker = new WorkerShim ( script, { name, type: 'module' } );
